@@ -1,0 +1,5 @@
+name: Ziggy
+main: gg.packetloss.ziggy.bukkit.ZiggyPlugin
+version: ${projectVersion}
+author: Dark_Arc
+api-version: 1.15
