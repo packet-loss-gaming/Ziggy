@@ -20,41 +20,57 @@
 
 package gg.packetloss.ziggy.intel.matcher;
 
+import gg.packetloss.ziggy.abstraction.ZBlockInfo;
 import gg.packetloss.ziggy.abstraction.ZWorld;
 import gg.packetloss.ziggy.intel.context.BlockActionContext;
 import gg.packetloss.ziggy.intel.context.PlayerTrustContext;
 
 import java.util.UUID;
 
-public class ContainerAddActionMatcher implements BlockAddMatcher {
-    @Override
-    public boolean matches(BlockActionContext blockContext) {
-        return blockContext.getFrom().isWorthless() && blockContext.getTo().isContainer();
-    }
+public abstract class AbstractBlockRemoveMatcher implements BlockRemoveMatcher {
+    public abstract boolean isMatchedBlock(ZBlockInfo blockType);
 
     @Override
-    public int getTrustAdjustmentInContext(BlockActionContext blockContext, PlayerTrustContext trustContext) {
+    public final boolean matches(BlockActionContext blockContext) {
+        return isMatchedBlock(blockContext.getFrom()) && blockContext.getTo().isAir();
+    }
+
+    public abstract int getOwnerAdjustment();
+    public abstract int getOwnerVisibleAdjustment();
+    public abstract int getGlobalTrustPunishmentLevel();
+    public abstract int getGlobalTrustPunishmentAdjustment();
+    public abstract int getGlobalTrustGraceLevel();
+    public abstract int getGlobalTrustGraceAdjustment();
+    public abstract int getFallbackTrustAdjustment();
+
+    @Override
+    public final int getTrustAdjustmentInContext(BlockActionContext blockContext, PlayerTrustContext trustContext) {
         ZWorld world = blockContext.getLocation().getWorld();
 
         UUID owner = trustContext.getAffectedCluster().getOwner();
         UUID player = blockContext.getPlayer();
 
-        // If this is the owner, increase trust marginally, they're contributing to their land.
+        // If this is the owner, this is fine, leave it neutral.
         if (owner.equals(player)) {
-            return 1;
+            return getOwnerAdjustment();
         }
 
         // If the owner can see this happening, increase trust more rapidly.
         if (world.isVisibleChange(owner, player)) {
-            return 3;
+            return getOwnerVisibleAdjustment();
         }
 
         // If the owner can't see this happening, and the player's global trust is bad, assume the worst.
-        if (trustContext.getGlobalTrust() < -10) {
-            return -1;
+        if (trustContext.getGlobalTrust() < getGlobalTrustPunishmentLevel()) {
+            return getGlobalTrustPunishmentAdjustment();
         }
 
-        // Otherwise, assume the best/neutrality.
-        return 0;
+        // If high global trust, assume good intent.
+        if (trustContext.getGlobalTrust() > getGlobalTrustGraceLevel()) {
+            return getGlobalTrustGraceAdjustment();
+        }
+
+        // Otherwise, assume this is bad faith.
+        return getFallbackTrustAdjustment();
     }
 }

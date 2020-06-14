@@ -32,7 +32,7 @@ public class BukkitBlockInfo implements ZBlockInfo {
     }
 
     @Override
-    public boolean isWorthless() {
+    public boolean isAir() {
         return blockData.getMaterial() == Material.AIR;
     }
 

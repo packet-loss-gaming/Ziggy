@@ -21,6 +21,7 @@
 package gg.packetloss.ziggy.bukkit.listener;
 
 import gg.packetloss.ziggy.bukkit.proxy.BukkitPreventionProxy;
+import org.bukkit.ChatColor;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -42,7 +43,7 @@ public class BukkitPreventionListener implements Listener {
         Block block = event.getBlockPlaced();
 
         if (proxy.placeBlock(player, block)) {
-            player.sendMessage("Ziggy thinks you're up to no good, but it's still in beta. So, it won't stop you.");
+            player.sendMessage(ChatColor.RED + "Ziggy thinks you're up to no good, but it's still in beta. So, it won't stop you.");
         }
     }
 
@@ -52,7 +53,7 @@ public class BukkitPreventionListener implements Listener {
         Block block = event.getBlock();
 
         if (proxy.breakBlock(player, block)) {
-            player.sendMessage("Ziggy thinks you're up to no good, but it's still in beta. So, it won't stop you.");
+            player.sendMessage(ChatColor.RED + "Ziggy thinks you're up to no good, but it's still in beta. So, it won't stop you.");
         }
     }
 }

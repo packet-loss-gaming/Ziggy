@@ -25,7 +25,10 @@ import gg.packetloss.ziggy.abstraction.ZLocation;
 import gg.packetloss.ziggy.intel.context.BlockActionContext;
 import gg.packetloss.ziggy.intel.context.PlayerTrustContext;
 import gg.packetloss.ziggy.intel.matcher.BlockActionMatcher;
-import gg.packetloss.ziggy.intel.matcher.ContainerAddActionMatcher;
+import gg.packetloss.ziggy.intel.matcher.builtin.AnyBlockAddActionMatcher;
+import gg.packetloss.ziggy.intel.matcher.builtin.AnyBlockRemoveActionMatcher;
+import gg.packetloss.ziggy.intel.matcher.builtin.ContainerAddActionMatcher;
+import gg.packetloss.ziggy.intel.matcher.builtin.ContainerRemoveActionMatcher;
 import gg.packetloss.ziggy.point.AnnotatedPointCluster;
 
 import java.util.ArrayList;
@@ -45,7 +48,13 @@ public class Tracker {
     }
 
     private void setupDefaultActionMatchers() {
+        // More specific matches should come first
         blockActionMatchers.add(new ContainerAddActionMatcher());
+        blockActionMatchers.add(new ContainerRemoveActionMatcher());
+
+        // Fallback matchers
+        blockActionMatchers.add(new AnyBlockAddActionMatcher());
+        blockActionMatchers.add(new AnyBlockRemoveActionMatcher());
     }
 
     public List<BlockActionMatcher> getBlockActionMatchers() {

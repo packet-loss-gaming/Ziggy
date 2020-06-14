@@ -18,28 +18,39 @@
  *
  */
 
-package gg.packetloss.ziggy.trust;
+package gg.packetloss.ziggy.intel.matcher.builtin;
 
-import java.util.UUID;
+import gg.packetloss.ziggy.abstraction.ZBlockInfo;
+import gg.packetloss.ziggy.intel.matcher.AbstractBlockAddMatcher;
 
-public class AnnotatedTrustIndex {
-    private final UUID owner;
-    private final TrustIndex index;
-
-    public AnnotatedTrustIndex(UUID owner, TrustIndex index) {
-        this.owner = owner;
-        this.index = index;
+public class AnyBlockAddActionMatcher extends AbstractBlockAddMatcher {
+    @Override
+    public boolean isMatchedBlock(ZBlockInfo blockType) {
+        return !blockType.isAir();
     }
 
-    public UUID getOwner() {
-        return owner;
+    @Override
+    public int getOwnerAdjustment() {
+        return 1;
     }
 
-    public void adjustTrust(UUID player, int adjustment) {
-        index.adjustTrust(player, adjustment);
+    @Override
+    public int getOwnerVisibleAdjustment() {
+        return 3;
     }
 
-    public int getTrust(UUID player) {
-        return index.getTrust(player);
+    @Override
+    public int getGlobalTrustPunishmentLevel() {
+        return -10;
+    }
+
+    @Override
+    public int getGlobalTrustPunishmentAdjustment() {
+        return -1;
+    }
+
+    @Override
+    public int getFallbackTrustAdjustment() {
+        return 0;
     }
 }

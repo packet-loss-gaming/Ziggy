@@ -18,16 +18,39 @@
  *
  */
 
-package gg.packetloss.ziggy.abstraction;
+package gg.packetloss.ziggy.intel.matcher.builtin;
 
-class ZDummyInfo implements ZBlockInfo {
+import gg.packetloss.ziggy.abstraction.ZBlockInfo;
+import gg.packetloss.ziggy.intel.matcher.AbstractBlockAddMatcher;
+
+public class ContainerAddActionMatcher extends AbstractBlockAddMatcher {
     @Override
-    public boolean isAir() {
-        return true;
+    public boolean isMatchedBlock(ZBlockInfo blockType) {
+        return blockType.isContainer();
     }
 
     @Override
-    public boolean isContainer() {
-        return false;
+    public int getOwnerAdjustment() {
+        return 1;
+    }
+
+    @Override
+    public int getOwnerVisibleAdjustment() {
+        return 6;
+    }
+
+    @Override
+    public int getGlobalTrustPunishmentLevel() {
+        return -10;
+    }
+
+    @Override
+    public int getGlobalTrustPunishmentAdjustment() {
+        return -1;
+    }
+
+    @Override
+    public int getFallbackTrustAdjustment() {
+        return 0;
     }
 }

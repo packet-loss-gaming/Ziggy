@@ -23,7 +23,7 @@ package gg.packetloss.ziggy.abstraction;
 public interface ZBlockInfo {
     public static final ZBlockInfo IRRELEVANT = new ZDummyInfo();
 
-    public boolean isWorthless();
+    public boolean isAir();
     public boolean isContainer();
 
 }
