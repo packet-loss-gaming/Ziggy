@@ -29,6 +29,11 @@ public class TrustManager {
     private Map<UUID, Integer> globalTrust = new HashMap<>();
 
     private void adjustLocalizedTrust(UUID owner, UUID player, int adjustment) {
+        // Don't create a "self trust" index, that's just silly
+        if (owner.equals(player)) {
+            return;
+        }
+
         TrustIndex trustIndex = playerTrust.compute(owner, (ignored, value) -> {
             if (value == null) {
                 value = new TrustIndex();

@@ -38,7 +38,7 @@ public class BukkitWorld implements ZWorld {
 
     @Override
     public String getName() {
-        return world.getName();
+        return world.getName().toLowerCase().replaceAll("[ _]", "-");
     }
 
     @Override

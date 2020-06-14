@@ -29,11 +29,11 @@ import java.util.*;
 public class ClusterManager {
     private static final int QUEUE_FLUSH_LENGTH = 10;
 
-    private final HullSolver hullSolver = new JarivsHull();
-    private final HullInterpreter hullInterpreter = new HullInterpreter();
+    private transient final HullSolver hullSolver = new JarivsHull();
+    private transient final HullInterpreter hullInterpreter = new HullInterpreter();
 
     private final Map<UUID, List<PointCluster>> pointClusters = new HashMap<>();
-    private final Map<UUID, List<Point2D>> pointQueue = new HashMap<>();
+    private transient final Map<UUID, List<Point2D>> pointQueue = new HashMap<>();
 
     public void addPoints(UUID owner, List<Point2D> pointsToAdd) {
         List<PointCluster> ownerClusters = pointClusters.compute(owner, (ignored, value) -> {

@@ -27,29 +27,63 @@ import gg.packetloss.ziggy.bukkit.proxy.BukkitPreventionProxy;
 import gg.packetloss.ziggy.bukkit.proxy.BukkitTrackerProxy;
 import gg.packetloss.ziggy.intel.Protector;
 import gg.packetloss.ziggy.intel.Tracker;
+import gg.packetloss.ziggy.serialization.ZiggyGsonSerializer;
+import gg.packetloss.ziggy.serialization.ZiggySerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 public class ZiggyPlugin extends JavaPlugin {
+    private ZiggySerializer serializer;
     private ZiggyCore core;
     private Tracker tracker;
     private Protector protector;
 
+    private Path getSaveDataDirectory() throws IOException {
+        Path saveDataDir = getDataFolder().toPath().resolve("data");
+        Files.createDirectories(saveDataDir);
+        return saveDataDir;
+    }
+
     @Override
     public void onLoad() {
-        core = new ZiggyCore();
-        tracker = new Tracker(core);
-        protector = new Protector(core);
+        try {
+            serializer = new ZiggyGsonSerializer(getSaveDataDirectory());
+
+            core = serializer.load();
+            tracker = new Tracker(core);
+            protector = new Protector(core);
+
+            getLogger().info("Ziggy loaded successfully!");
+        } catch (IOException e) {
+            getLogger().severe("Ziggy failed to load, shutting down!");
+            e.printStackTrace();
+            Bukkit.shutdown();
+        }
     }
 
     private void registerEvents(Listener listener) {
         Bukkit.getPluginManager().registerEvents(listener, this);
     }
 
+    private void serialize() {
+        try {
+            core.serializeWith(serializer);
+        } catch (IOException e) {
+            getLogger().severe("Ziggy failed to save state!");
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void onEnable() {
         registerEvents(new BukkitTrackingListener(new BukkitTrackerProxy(tracker)));
         registerEvents(new BukkitPreventionListener(new BukkitPreventionProxy(protector)));
+
+        Bukkit.getServer().getScheduler().runTaskTimer(this, this::serialize, 1, 20 * 5);
     }
 }

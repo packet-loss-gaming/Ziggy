@@ -25,16 +25,22 @@ import gg.packetloss.ziggy.abstraction.ZWorld;
 import gg.packetloss.ziggy.point.AnnotatedPointCluster;
 import gg.packetloss.ziggy.point.ClusterManager;
 import gg.packetloss.ziggy.point.Point2D;
+import gg.packetloss.ziggy.serialization.ZiggySerializer;
 import gg.packetloss.ziggy.trust.TrustManager;
 
-import java.util.HashMap;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 public class ZiggyCore {
-    private Map<String, ClusterManager> clusterManager = new HashMap<>();
-    private TrustManager trustManager = new TrustManager();
+    private final Map<String, ClusterManager> clusterManager;
+    private final TrustManager trustManager;
+
+    public ZiggyCore(Map<String, ClusterManager> clusterManager, TrustManager trustManager) {
+        this.clusterManager = clusterManager;
+        this.trustManager = trustManager;
+    }
 
     private ClusterManager getFor(ZWorld world) {
         return clusterManager.compute(world.getName(), (ignored, value) -> {
@@ -71,5 +77,13 @@ public class ZiggyCore {
 
     public int getLocalTrust(UUID owner, UUID player) {
         return trustManager.getLocalTrust(owner, player);
+    }
+
+    public void serializeWith(ZiggySerializer serializer) throws IOException {
+        for (Map.Entry<String, ClusterManager> entry : clusterManager.entrySet()) {
+            serializer.write(entry.getKey(), entry.getValue());
+        }
+
+        serializer.write(trustManager);
     }
 }
