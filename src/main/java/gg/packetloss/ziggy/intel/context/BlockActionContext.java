@@ -22,8 +22,6 @@ package gg.packetloss.ziggy.intel.context;
 
 import gg.packetloss.ziggy.abstraction.ZBlockInfo;
 import gg.packetloss.ziggy.abstraction.ZLocation;
-import gg.packetloss.ziggy.point.AnnotatedPointCluster;
-import org.bukkit.Location;
 
 import java.util.UUID;
 

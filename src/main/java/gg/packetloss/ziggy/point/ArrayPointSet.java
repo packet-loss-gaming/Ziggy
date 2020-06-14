@@ -20,7 +20,6 @@
 
 package gg.packetloss.ziggy.point;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
 public class ArrayPointSet implements Set<Point2D> {

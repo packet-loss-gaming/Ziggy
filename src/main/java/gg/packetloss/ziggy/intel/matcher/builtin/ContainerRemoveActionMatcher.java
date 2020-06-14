@@ -21,13 +21,7 @@
 package gg.packetloss.ziggy.intel.matcher.builtin;
 
 import gg.packetloss.ziggy.abstraction.ZBlockInfo;
-import gg.packetloss.ziggy.abstraction.ZWorld;
-import gg.packetloss.ziggy.intel.context.BlockActionContext;
-import gg.packetloss.ziggy.intel.context.PlayerTrustContext;
 import gg.packetloss.ziggy.intel.matcher.AbstractBlockRemoveMatcher;
-import gg.packetloss.ziggy.intel.matcher.BlockRemoveMatcher;
-
-import java.util.UUID;
 
 public class ContainerRemoveActionMatcher extends AbstractBlockRemoveMatcher {
     @Override

@@ -25,7 +25,6 @@ import gg.packetloss.ziggy.point.ClusterManager;
 import gg.packetloss.ziggy.trust.TrustManager;
 
 import java.io.IOException;
-import java.util.Optional;
 
 public interface ZiggySerializer {
     public void write(String world, ClusterManager clusterManager) throws IOException;
