@@ -89,9 +89,9 @@ public class ZiggyGsonSerializer implements ZiggySerializer {
         Map<String, ClusterManager> loadedClusters = new HashMap<>();
 
         if (Files.exists(getClustersDirectory())) {
-            List<Path> worldClusters = Files.walk(getClustersDirectory()).filter(p -> p.endsWith(".json")).collect(Collectors.toList());
+            List<Path> worldClusters = Files.walk(getClustersDirectory()).filter(p -> p.toString().endsWith(".json")).collect(Collectors.toList());
             for (Path worldClusterPath : worldClusters) {
-                String worldName = worldClusterPath.getFileName().toString().split(".")[0];
+                String worldName = worldClusterPath.getFileName().toString().split("\\.")[0];
                 ClusterManager clusterManager;
 
                 try (BufferedReader reader = Files.newBufferedReader(worldClusterPath)) {
