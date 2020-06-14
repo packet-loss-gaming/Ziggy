@@ -24,6 +24,7 @@ import gg.packetloss.ziggy.abstraction.ZBlockInfo;
 import gg.packetloss.ziggy.abstraction.ZLocation;
 import gg.packetloss.ziggy.abstraction.ZWorld;
 import gg.packetloss.ziggy.point.Point3D;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 
 public class BukkitLocation implements ZLocation {
@@ -33,6 +34,11 @@ public class BukkitLocation implements ZLocation {
     public BukkitLocation(Block block) {
         this.world = new BukkitWorld(block.getWorld());
         this.point = new Point3D(block.getX(), block.getY(), block.getZ());
+    }
+
+    public BukkitLocation(Location location) {
+        this.world = new BukkitWorld(location.getWorld());
+        this.point = new Point3D(location.getBlockX(), location.getBlockY(), location.getBlockZ());
     }
 
     @Override

@@ -18,24 +18,22 @@
  *
  */
 
-package gg.packetloss.ziggy.point;
+package gg.packetloss.ziggy.intel;
 
-import java.util.UUID;
+import gg.packetloss.ziggy.ZiggyCore;
+import gg.packetloss.ziggy.abstraction.ZLocation;
+import gg.packetloss.ziggy.point.AnnotatedPointCluster;
 
-public class AnnotatedPointCluster {
-    private final UUID owner;
-    private final PointCluster pointCluster;
+import java.util.List;
 
-    public AnnotatedPointCluster(UUID owner, PointCluster pointCluster) {
-        this.owner = owner;
-        this.pointCluster = pointCluster;
+public class Admin {
+    private final ZiggyCore core;
+
+    public Admin(ZiggyCore core) {
+        this.core = core;
     }
 
-    public UUID getOwner() {
-        return owner;
-    }
-
-    public PointCluster getPointCluster() {
-        return pointCluster;
+    public List<AnnotatedPointCluster> getPointClustersAt(ZLocation location) {
+        return core.getAffectedClusters(location);
     }
 }

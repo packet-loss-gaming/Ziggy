@@ -21,10 +21,13 @@
 package gg.packetloss.ziggy.bukkit;
 
 import gg.packetloss.ziggy.ZiggyCore;
+import gg.packetloss.ziggy.bukkit.listener.BukkitAdministrativeListener;
 import gg.packetloss.ziggy.bukkit.listener.BukkitPreventionListener;
 import gg.packetloss.ziggy.bukkit.listener.BukkitTrackingListener;
+import gg.packetloss.ziggy.bukkit.proxy.BukkitAdministrativeProxy;
 import gg.packetloss.ziggy.bukkit.proxy.BukkitPreventionProxy;
 import gg.packetloss.ziggy.bukkit.proxy.BukkitTrackerProxy;
+import gg.packetloss.ziggy.intel.Admin;
 import gg.packetloss.ziggy.intel.Protector;
 import gg.packetloss.ziggy.intel.Tracker;
 import gg.packetloss.ziggy.serialization.ZiggyGsonSerializer;
@@ -38,15 +41,22 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class ZiggyPlugin extends JavaPlugin {
+    private static ZiggyPlugin inst;
+
     private ZiggySerializer serializer;
     private ZiggyCore core;
     private Tracker tracker;
     private Protector protector;
+    private Admin admin;
 
     private Path getSaveDataDirectory() throws IOException {
         Path saveDataDir = getDataFolder().toPath().resolve("data");
         Files.createDirectories(saveDataDir);
         return saveDataDir;
+    }
+
+    public static ZiggyPlugin inst() {
+        return inst;
     }
 
     @Override
@@ -57,6 +67,9 @@ public class ZiggyPlugin extends JavaPlugin {
             core = serializer.load();
             tracker = new Tracker(core);
             protector = new Protector(core);
+            admin = new Admin(core);
+
+            inst = this;
 
             getLogger().info("Ziggy loaded successfully!");
         } catch (IOException e) {
@@ -83,6 +96,7 @@ public class ZiggyPlugin extends JavaPlugin {
     public void onEnable() {
         registerEvents(new BukkitTrackingListener(new BukkitTrackerProxy(tracker)));
         registerEvents(new BukkitPreventionListener(new BukkitPreventionProxy(protector)));
+        registerEvents(new BukkitAdministrativeListener(new BukkitAdministrativeProxy(admin)));
 
         Bukkit.getServer().getScheduler().runTaskTimer(this, this::serialize, 1, 20 * 5);
     }
