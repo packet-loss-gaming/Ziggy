@@ -20,16 +20,19 @@
 
 package gg.packetloss.ziggy.point.hull;
 
+import gg.packetloss.ziggy.point.ArrayPointSet;
 import gg.packetloss.ziggy.point.Point2D;
-
-import java.util.List;
 
 public class HullInterpreter {
     private static final int MAX_SPAN = 100;
     private static final int MAX_SPAN_SQ = MAX_SPAN * MAX_SPAN;
     private static final int MAX_AREA = 500;
 
-    public boolean isValid(List<Point2D> points) {
+    public boolean isValid(ArrayPointSet points) {
+        if (points.size() < 2) {
+            return false;
+        }
+
         double area = 0;
 
         Point2D lastSeenPoint = points.get(points.size() - 1);
@@ -49,7 +52,7 @@ public class HullInterpreter {
         return Math.abs(area / 2) < MAX_AREA;
     }
 
-    public long getArea(List<Point2D> points) {
+    public long getArea(ArrayPointSet points) {
         double area = 0;
 
         Point2D lastSeenPoint = points.get(points.size() - 1);

@@ -20,10 +20,11 @@
 
 package gg.packetloss.ziggy.point.hull;
 
+import gg.packetloss.ziggy.point.ArrayPointSet;
 import gg.packetloss.ziggy.point.Point2D;
 
 import java.util.List;
 
 public interface HullSolver {
-    public List<Point2D> hull(List<Point2D> points);
+    public ArrayPointSet hull(ArrayPointSet points);
 }

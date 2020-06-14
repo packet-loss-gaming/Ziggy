@@ -20,12 +20,10 @@
 
 package gg.packetloss.ziggy.point.hull;
 
+import gg.packetloss.ziggy.point.ArrayPointSet;
 import gg.packetloss.ziggy.point.Point2D;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class JarivsHull implements HullSolver {
+public class JarvisHull implements HullSolver {
     private enum CCWState {
         COLINEAR,
         CLOCKWISE,
@@ -44,9 +42,9 @@ public class JarivsHull implements HullSolver {
     }
 
     @Override
-    public List<Point2D> hull(List<Point2D> points) {
+    public ArrayPointSet hull(ArrayPointSet points) {
         if (points.size() < 4) {
-            return new ArrayList<>(points);
+            return new ArrayPointSet(points);
         }
 
         // Find the left most point
@@ -57,7 +55,7 @@ public class JarivsHull implements HullSolver {
             }
         }
 
-        List<Point2D> hullPoints = new ArrayList<>(4);
+        ArrayPointSet hullPoints = new ArrayPointSet();
 
         // Setup the left value
         int p = left;

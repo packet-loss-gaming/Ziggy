@@ -31,8 +31,8 @@ public class PointCluster {
     private int minZ;
     private int maxZ;
 
-    public List<Point2D> getPoints() {
-        return new ArrayList<>(points);
+    public ArrayPointSet getPoints() {
+        return new ArrayPointSet(points);
     }
 
     private void flush() {
@@ -54,10 +54,10 @@ public class PointCluster {
         }
     }
 
-    public void setPoints(List<Point2D> points) {
+    public void setPoints(ArrayPointSet points) {
         assert points.size() > 0;
 
-        this.points = points;
+        this.points = points.asList();
 
         flush();
     }

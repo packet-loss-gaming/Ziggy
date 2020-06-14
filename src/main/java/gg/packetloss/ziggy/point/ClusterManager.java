@@ -20,22 +20,22 @@
 
 package gg.packetloss.ziggy.point;
 
-import gg.packetloss.ziggy.point.hull.HullSolver;
 import gg.packetloss.ziggy.point.hull.HullInterpreter;
-import gg.packetloss.ziggy.point.hull.JarivsHull;
+import gg.packetloss.ziggy.point.hull.HullSolver;
+import gg.packetloss.ziggy.point.hull.JarvisHull;
 
 import java.util.*;
 
 public class ClusterManager {
-    private static final int QUEUE_FLUSH_LENGTH = 10;
+    private static final int QUEUE_FLUSH_LENGTH = 4;
 
-    private transient final HullSolver hullSolver = new JarivsHull();
+    private transient final HullSolver hullSolver = new JarvisHull();
     private transient final HullInterpreter hullInterpreter = new HullInterpreter();
 
     private final Map<UUID, List<PointCluster>> pointClusters = new HashMap<>();
-    private transient final Map<UUID, List<Point2D>> pointQueue = new HashMap<>();
+    private transient final Map<UUID, ArrayPointSet> pointQueue = new HashMap<>();
 
-    public void addPoints(UUID owner, List<Point2D> pointsToAdd) {
+    public void addPoints(UUID owner, ArrayPointSet pointsToAdd) {
         List<PointCluster> ownerClusters = pointClusters.compute(owner, (ignored, value) -> {
             if (value == null) {
                 value = new ArrayList<>();
@@ -45,9 +45,9 @@ public class ClusterManager {
 
         // Try to add the points to an existing hull
         for (PointCluster ownerCluster : ownerClusters) {
-            List<Point2D> points = ownerCluster.getPoints();
+            ArrayPointSet points = ownerCluster.getPoints();
             points.addAll(pointsToAdd);
-            List<Point2D> newPoints = hullSolver.hull(points);
+            ArrayPointSet newPoints = hullSolver.hull(points);
 
             if (hullInterpreter.isValid(newPoints)) {
                 ownerCluster.setPoints(newPoints);
@@ -63,19 +63,31 @@ public class ClusterManager {
         }
     }
 
+    private void flush(UUID player) {
+        ArrayPointSet points = pointQueue.remove(player);
+        addPoints(player, points);
+    }
+
     public void enqueue(UUID player, Point2D point) {
-        List<Point2D> points = pointQueue.compute(player, (ignored, value) -> {
+        ArrayPointSet points = pointQueue.compute(player, (ignored, value) -> {
             if (value == null) {
-                value = new ArrayList<>();
+                value = new ArrayPointSet();
             }
             return value;
         });
 
-        points.add(point);
+        // Check to see if the distance of this point exceeds the maximum/we should split clusters
+        // to improve chances of good clustering
+        if (points.size() > 0 && points.get(points.size() - 1).distanceSquared(point) > 15 * 15) {
+            flush(player);
+            enqueue(player, point);
+            return;
+        }
 
-        if (points.size() > QUEUE_FLUSH_LENGTH) {
-            pointQueue.remove(player);
-            addPoints(player, points);
+        // Add the point, then see if we have enough to force a flush
+        points.add(point);
+        if (points.size() >= QUEUE_FLUSH_LENGTH) {
+            flush(player);
         }
     }
 
@@ -84,7 +96,7 @@ public class ClusterManager {
 
         for (Map.Entry<UUID, List<PointCluster>> entry : pointClusters.entrySet()) {
             for (PointCluster cluster : entry.getValue()) {
-                List<Point2D> points = cluster.getPoints();
+                ArrayPointSet points = cluster.getPoints();
 
                 // Calculate original area
                 long originalArea = hullInterpreter.getArea(points);

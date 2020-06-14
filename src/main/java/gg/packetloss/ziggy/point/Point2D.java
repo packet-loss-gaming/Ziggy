@@ -40,4 +40,17 @@ public class Point2D {
     public double distanceSquared(Point2D other) {
         return Math.pow(getX() - other.getX(), 2) + Math.pow(getZ() - other.getZ(), 2);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Point2D)) {
+            return false;
+        }
+        return ((Point2D) o).x == x && ((Point2D) o).z == z;
+    }
+
+    @Override
+    public int hashCode() {
+        return (x << 16) ^ z;
+    }
 }
