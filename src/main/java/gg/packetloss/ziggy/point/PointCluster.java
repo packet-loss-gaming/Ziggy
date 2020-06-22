@@ -66,4 +66,8 @@ public class PointCluster {
         return minX <= point2D.getX() && point2D.getX() <= maxX &&
                 minZ <= point2D.getZ() && point2D.getZ() <= maxZ;
     }
+
+    public Point2D getRoughCenter() {
+        return new Point2D((minX + maxX) / 2, (minZ + maxZ) / 2);
+    }
 }

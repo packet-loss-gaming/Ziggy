@@ -59,6 +59,14 @@ public class ZiggyCore {
         return getAffectedClusters(location.getWorld(), location.getPosition().to2D());
     }
 
+    public List<AnnotatedPointCluster> getClustersNear(ZWorld world, Point2D point) {
+        return getFor(world).getClustersNear(point);
+    }
+
+    public List<AnnotatedPointCluster> getClustersNear(ZLocation location) {
+        return getClustersNear(location.getWorld(), location.getPosition().to2D());
+    }
+
     public void enqueue(UUID player, ZWorld world, Point2D point) {
         getFor(world).enqueue(player, point);
     }

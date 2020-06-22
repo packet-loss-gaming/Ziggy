@@ -33,7 +33,7 @@ public class Admin {
         this.core = core;
     }
 
-    public List<AnnotatedPointCluster> getPointClustersAt(ZLocation location) {
-        return core.getAffectedClusters(location);
+    public List<AnnotatedPointCluster> getPointClustersNear(ZLocation location) {
+        return core.getClustersNear(location);
     }
 }

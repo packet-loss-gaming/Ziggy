@@ -66,7 +66,7 @@ public class BukkitAdministrativeProxy {
     }
 
     private void drawPointsFor(Player player, Location where) {
-        List<AnnotatedPointCluster> clusters = admin.getPointClustersAt(new BukkitLocation(where));
+        List<AnnotatedPointCluster> clusters = admin.getPointClustersNear(new BukkitLocation(where));
 
         List<Location> fakeLocations = new ArrayList<>();
 

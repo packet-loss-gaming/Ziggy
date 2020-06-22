@@ -176,6 +176,33 @@ public class ClusterManager {
         }
     }
 
+    private List<AnnotatedPointCluster> getClustersWithLockNear(Point2D point) {
+        List<AnnotatedPointCluster> annotatedPointClusters = new ArrayList<>();
+
+        for (Map.Entry<UUID, List<PointCluster>> entry : pointClusters.entrySet()) {
+            for (PointCluster cluster : entry.getValue()) {
+                // Filter out points that are clearly out of bounds
+                if (cluster.getRoughCenter().distanceSquared(point) > 100 * 100) {
+                    continue;
+                }
+
+                annotatedPointClusters.add(new AnnotatedPointCluster(entry.getKey(), cluster));
+            }
+        }
+
+        return annotatedPointClusters;
+    }
+
+    public List<AnnotatedPointCluster> getClustersNear(Point2D point) {
+        pointClusterLock.readLock().lock();
+
+        try {
+            return getClustersWithLockNear(point);
+        } finally {
+            pointClusterLock.readLock().unlock();
+        }
+    }
+
     private void replayDelayedWithLock() {
         delayedPointQueueLock.lock();
 
