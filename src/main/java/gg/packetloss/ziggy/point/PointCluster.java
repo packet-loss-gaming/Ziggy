@@ -38,10 +38,10 @@ public class PointCluster {
     private void flush() {
         Point2D first = points.get(0);
 
-        int minX = first.getX();
-        int maxX = first.getX();
-        int minZ = first.getZ();
-        int maxZ = first.getZ();
+        minX = first.getX();
+        maxX = first.getX();
+        minZ = first.getZ();
+        maxZ = first.getZ();
 
         for (int i = 1; i < points.size(); ++i) {
             Point2D point2D = points.get(i);
@@ -60,5 +60,10 @@ public class PointCluster {
         this.points = points.asList();
 
         flush();
+    }
+
+    public boolean quickContains(Point2D point2D) {
+        return minX <= point2D.getX() && point2D.getX() <= maxX &&
+                minZ <= point2D.getZ() && point2D.getZ() <= maxZ;
     }
 }

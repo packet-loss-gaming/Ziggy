@@ -96,6 +96,11 @@ public class ClusterManager {
 
         for (Map.Entry<UUID, List<PointCluster>> entry : pointClusters.entrySet()) {
             for (PointCluster cluster : entry.getValue()) {
+                // Filter out points that are clearly out of bounds
+                if (!cluster.quickContains(point)) {
+                    continue;
+                }
+
                 ArrayPointSet points = cluster.getPoints();
 
                 // Calculate original area
