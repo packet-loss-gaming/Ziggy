@@ -29,6 +29,7 @@ import gg.packetloss.ziggy.point.Point2D;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -39,6 +40,7 @@ import java.util.List;
 public class BukkitAdministrativeProxy {
     private final Admin admin;
     private ImmutableList<BlockData> coloredBlocks;
+    private BlockData playerStripeBlock = Material.WHITE_CONCRETE.createBlockData();
 
     public BukkitAdministrativeProxy(Admin admin) {
         this.admin = admin;
@@ -50,6 +52,10 @@ public class BukkitAdministrativeProxy {
         List<BlockData> coloredBlocks = new ArrayList<>();
 
         for (Material material : Material.values()) {
+            if (material == Material.WHITE_CONCRETE) {
+                continue;
+            }
+
             String name = material.name();
             if (name.endsWith("CONCRETE") && !name.startsWith("LEGACY_")) {
                 coloredBlocks.add(material.createBlockData());
@@ -64,6 +70,11 @@ public class BukkitAdministrativeProxy {
 
         List<Location> fakeLocations = new ArrayList<>();
 
+        int playerYPos = player.getLocation().getBlockY();
+
+        World world = where.getWorld();
+        int worldHeight = world.getMaxHeight();
+
         // Send colored regions
         int index = 0;
         for (AnnotatedPointCluster cluster : clusters) {
@@ -72,11 +83,21 @@ public class BukkitAdministrativeProxy {
             for (Point2D point : cluster.getPointCluster().getPoints()) {
                 int x = point.getX();
                 int z = point.getZ();
-                int y = where.getWorld().getHighestBlockAt(x, z).getY();
+                int maxY = Math.min(worldHeight, playerYPos + 10);
 
-                Location fakeLocation = new Location(where.getWorld(), x, y, z);
-                player.sendBlockChange(fakeLocation, fakeBlock);
-                fakeLocations.add(fakeLocation);
+                for (int yAdjustment = 20; yAdjustment > 0; --yAdjustment) {
+                    int y = Math.max(0, maxY - yAdjustment);
+                    Location fakeLocation = new Location(where.getWorld(), x, y, z);
+
+                    // If the player owns the region, every other block should be white concrete
+                    if (y % 2 == 0 && cluster.getOwner().equals(player.getUniqueId())) {
+                        player.sendBlockChange(fakeLocation, playerStripeBlock);
+                    } else {
+                        player.sendBlockChange(fakeLocation, fakeBlock);
+                    }
+
+                    fakeLocations.add(fakeLocation);
+                }
             }
             ++index;
         }
