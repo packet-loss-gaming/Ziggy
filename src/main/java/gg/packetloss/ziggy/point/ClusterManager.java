@@ -23,8 +23,15 @@ package gg.packetloss.ziggy.point;
 import gg.packetloss.ziggy.point.hull.HullInterpreter;
 import gg.packetloss.ziggy.point.hull.HullSolver;
 import gg.packetloss.ziggy.point.hull.JarvisHull;
+import gg.packetloss.ziggy.serialization.Serializable;
+import gg.packetloss.ziggy.serialization.SerializationConsumer;
 
+import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ClusterManager {
     private static final int QUEUE_FLUSH_LENGTH = 4;
@@ -34,8 +41,15 @@ public class ClusterManager {
 
     private final Map<UUID, List<PointCluster>> pointClusters = new HashMap<>();
     private transient final Map<UUID, ArrayPointSet> pointQueue = new HashMap<>();
+    private transient final List<Map.Entry<UUID, ArrayPointSet>> delayedPointQueue = new ArrayList<>();
 
-    public void addPoints(UUID owner, ArrayPointSet pointsToAdd) {
+    private transient boolean dirty = false;
+
+    private transient ReadWriteLock pointClusterLock = new ReentrantReadWriteLock();
+    private transient Lock pointQueueLock = new ReentrantLock();
+    private transient Lock delayedPointQueueLock = new ReentrantLock();
+
+    private void addPointsWithLock(UUID owner, ArrayPointSet pointsToAdd) {
         List<PointCluster> ownerClusters = pointClusters.compute(owner, (ignored, value) -> {
             if (value == null) {
                 value = new ArrayList<>();
@@ -51,6 +65,7 @@ public class ClusterManager {
 
             if (hullInterpreter.isValid(newPoints)) {
                 ownerCluster.setPoints(newPoints);
+                dirty = true;
                 return;
             }
         }
@@ -60,15 +75,37 @@ public class ClusterManager {
             PointCluster cluster = new PointCluster();
             cluster.setPoints(pointsToAdd);
             ownerClusters.add(cluster);
+            dirty = true;
         }
     }
 
-    private void flush(UUID player) {
+    public void addPoints(UUID owner, ArrayPointSet pointsToAdd) {
+        // Try to get the main lock, if this fails, add this point set to a delayed queue
+        if (!pointClusterLock.writeLock().tryLock()) {
+            delayedPointQueueLock.lock();
+
+            try {
+                delayedPointQueue.add(new AbstractMap.SimpleEntry<>(owner, pointsToAdd));
+            } finally {
+                delayedPointQueueLock.unlock();
+            }
+
+            return;
+        }
+
+        try {
+            addPointsWithLock(owner, pointsToAdd);
+        } finally {
+            pointClusterLock.writeLock().unlock();
+        }
+    }
+
+    private void flushQueueWithLock(UUID player) {
         ArrayPointSet points = pointQueue.remove(player);
         addPoints(player, points);
     }
 
-    public void enqueue(UUID player, Point2D point) {
+    private void enqueueWithLock(UUID player, Point2D point) {
         ArrayPointSet points = pointQueue.compute(player, (ignored, value) -> {
             if (value == null) {
                 value = new ArrayPointSet();
@@ -79,19 +116,29 @@ public class ClusterManager {
         // Check to see if the distance of this point exceeds the maximum/we should split clusters
         // to improve chances of good clustering
         if (points.size() > 0 && points.get(points.size() - 1).distanceSquared(point) > 15 * 15) {
-            flush(player);
-            enqueue(player, point);
+            flushQueueWithLock(player);
+            enqueueWithLock(player, point);
             return;
         }
 
         // Add the point, then see if we have enough to force a flush
         points.add(point);
         if (points.size() >= QUEUE_FLUSH_LENGTH) {
-            flush(player);
+            flushQueueWithLock(player);
         }
     }
 
-    public List<AnnotatedPointCluster> getClustersAt(Point2D point) {
+    public void enqueue(UUID player, Point2D point) {
+        pointQueueLock.lock();
+
+        try {
+            enqueueWithLock(player, point);
+        } finally {
+            pointQueueLock.unlock();
+        }
+    }
+
+    private List<AnnotatedPointCluster> getClustersWithLockAt(Point2D point) {
         List<AnnotatedPointCluster> annotatedPointClusters = new ArrayList<>();
 
         for (Map.Entry<UUID, List<PointCluster>> entry : pointClusters.entrySet()) {
@@ -117,5 +164,46 @@ public class ClusterManager {
         }
 
         return annotatedPointClusters;
+    }
+
+    public List<AnnotatedPointCluster> getClustersAt(Point2D point) {
+        pointClusterLock.readLock().lock();
+
+        try {
+            return getClustersWithLockAt(point);
+        } finally {
+            pointClusterLock.readLock().unlock();
+        }
+    }
+
+    private void replayDelayedWithLock() {
+        delayedPointQueueLock.lock();
+
+        try {
+            for (Map.Entry<UUID, ArrayPointSet> entry : delayedPointQueue) {
+                addPointsWithLock(entry.getKey(), entry.getValue());
+            }
+
+            delayedPointQueue.clear();
+        } finally {
+            delayedPointQueueLock.unlock();
+        }
+    }
+    
+    public void writeToDisk(SerializationConsumer<ClusterManager> consumer) throws IOException {
+        pointClusterLock.writeLock().lock();
+
+        try {
+            if (!dirty) {
+                return;
+            }
+
+            consumer.accept(new Serializable<>(this));
+            dirty = false;
+
+            replayDelayedWithLock();
+        } finally {
+            pointClusterLock.writeLock().unlock();
+        }
     }
 }

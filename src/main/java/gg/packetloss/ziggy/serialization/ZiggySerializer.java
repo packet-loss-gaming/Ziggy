@@ -27,7 +27,7 @@ import gg.packetloss.ziggy.trust.TrustManager;
 import java.io.IOException;
 
 public interface ZiggySerializer {
-    public void write(String world, ClusterManager clusterManager) throws IOException;
-    public void write(TrustManager trustManager) throws IOException;
+    public void write(String world, Serializable<ClusterManager> clusterManager) throws IOException;
+    public void write(Serializable<TrustManager> trustManager) throws IOException;
     public ZiggyCore load() throws IOException;
 }

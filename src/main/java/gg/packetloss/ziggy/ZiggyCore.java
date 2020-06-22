@@ -81,9 +81,11 @@ public class ZiggyCore {
 
     public void serializeWith(ZiggySerializer serializer) throws IOException {
         for (Map.Entry<String, ClusterManager> entry : clusterManager.entrySet()) {
-            serializer.write(entry.getKey(), entry.getValue());
+            entry.getValue().writeToDisk(serializableCluster -> {
+                serializer.write(entry.getKey(), serializableCluster);
+            });
         }
 
-        serializer.write(trustManager);
+        trustManager.writeToDisk(serializer::write);
     }
 }

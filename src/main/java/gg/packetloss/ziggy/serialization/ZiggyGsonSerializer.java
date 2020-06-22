@@ -51,14 +51,14 @@ public class ZiggyGsonSerializer implements ZiggySerializer {
     }
 
     @Override
-    public void write(String world, ClusterManager clusterManager) throws IOException {
+    public void write(String world, Serializable<ClusterManager> clusterManager) throws IOException {
         Path clustersDir = getClustersDirectory();
 
         Files.createDirectories(clustersDir);
 
         Path worldFileTmp = clustersDir.resolve(world + ".json.tmp");
         try (BufferedWriter writer = Files.newBufferedWriter(worldFileTmp, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            writer.write(GSON.toJson(clusterManager));
+            writer.write(GSON.toJson(clusterManager.get()));
         }
 
         Path worldFile = clustersDir.resolve(world + ".json");
@@ -74,10 +74,10 @@ public class ZiggyGsonSerializer implements ZiggySerializer {
     }
 
     @Override
-    public void write(TrustManager trustManager) throws IOException {
+    public void write(Serializable<TrustManager> trustManager) throws IOException {
         Path trustFileTmp = getTmpTrustFile();
         try (BufferedWriter writer = Files.newBufferedWriter(trustFileTmp, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            writer.write(GSON.toJson(trustManager));
+            writer.write(GSON.toJson(trustManager.get()));
         }
 
         Path trustFile = getTrustFile();

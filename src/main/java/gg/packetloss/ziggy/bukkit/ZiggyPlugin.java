@@ -98,6 +98,6 @@ public class ZiggyPlugin extends JavaPlugin {
         registerEvents(new BukkitPreventionListener(new BukkitPreventionProxy(protector)));
         registerEvents(new BukkitAdministrativeListener(new BukkitAdministrativeProxy(admin)));
 
-        Bukkit.getScheduler().runTaskTimer(this, this::serialize, 1, 20 * 5);
+        Bukkit.getScheduler().runTaskTimerAsynchronously(this, this::serialize, 1, 20 * 5);
     }
 }

@@ -18,28 +18,10 @@
  *
  */
 
-package gg.packetloss.ziggy.point;
+package gg.packetloss.ziggy.serialization;
 
-import java.util.UUID;
+import java.io.IOException;
 
-public class AnnotatedPointCluster {
-    private final UUID owner;
-    private final ImmutablePointCluster pointCluster;
-
-    public AnnotatedPointCluster(UUID owner, ImmutablePointCluster pointCluster) {
-        this.owner = owner;
-        this.pointCluster = pointCluster;
-    }
-
-    public AnnotatedPointCluster(UUID owner, PointCluster pointCluster) {
-        this(owner, new ImmutablePointCluster(pointCluster));
-    }
-
-    public UUID getOwner() {
-        return owner;
-    }
-
-    public ImmutablePointCluster getPointCluster() {
-        return pointCluster;
-    }
+public interface SerializationConsumer<T> {
+    public void accept(Serializable<T> argument) throws IOException;
 }

@@ -20,15 +20,25 @@
 
 package gg.packetloss.ziggy.trust;
 
+import gg.packetloss.ziggy.serialization.Serializable;
+import gg.packetloss.ziggy.serialization.SerializationConsumer;
+
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class TrustManager {
     private Map<UUID, TrustIndex> playerTrust = new HashMap<>();
     private Map<UUID, Integer> globalTrust = new HashMap<>();
 
-    private void adjustLocalizedTrust(UUID owner, UUID player, int adjustment) {
+    private transient boolean dirty = false;
+
+    private transient ReadWriteLock trustLock = new ReentrantReadWriteLock();
+
+    private void adjustLocalizedTrustWithLock(UUID owner, UUID player, int adjustment) {
         // Don't create a "self trust" index, that's just silly
         if (owner.equals(player)) {
             return;
@@ -44,7 +54,7 @@ public class TrustManager {
         trustIndex.adjustTrust(player, adjustment);
     }
 
-    private void adjustGlobalTrust(UUID player, int adjustment) {
+    private void adjustGlobalTrustWithLock(UUID player, int adjustment) {
         globalTrust.compute(player, (ignored, value) -> {
             if (value == null) {
                 value = 0;
@@ -53,21 +63,68 @@ public class TrustManager {
         });
     }
 
-    public void adjustTrust(UUID owner, UUID player, int adjustment) {
-        adjustLocalizedTrust(owner, player, adjustment);
-        adjustGlobalTrust(player, adjustment);
+    private void adjustTrustWithLock(UUID owner, UUID player, int adjustment) {
+        adjustLocalizedTrustWithLock(owner, player, adjustment);
+        adjustGlobalTrustWithLock(player, adjustment);
+
+        dirty = true;
     }
 
-    public int getGlobalTrust(UUID player) {
+    public void adjustTrust(UUID owner, UUID player, int adjustment) {
+        trustLock.writeLock().lock();
+
+        try {
+            adjustTrustWithLock(owner, player, adjustment);
+        } finally {
+            trustLock.writeLock().unlock();
+        }
+    }
+
+    private int getGlobalTrustWithLock(UUID player) {
         return globalTrust.getOrDefault(player, 0);
     }
 
-    public int getLocalTrust(UUID owner, UUID player) {
+    public int getGlobalTrust(UUID player) {
+        trustLock.readLock().lock();
+
+        try {
+            return getGlobalTrustWithLock(player);
+        } finally {
+            trustLock.readLock().unlock();
+        }
+    }
+
+    private int getLocalTrustWithLock(UUID owner, UUID player) {
         TrustIndex localTrustIndex = playerTrust.get(owner);
         if (localTrustIndex != null) {
             return localTrustIndex.getTrust(player);
         }
 
         return 0;
+    }
+
+    public int getLocalTrust(UUID owner, UUID player) {
+        trustLock.readLock().lock();
+
+        try {
+            return getLocalTrustWithLock(owner, player);
+        } finally {
+            trustLock.readLock().unlock();
+        }
+    }
+
+    public void writeToDisk(SerializationConsumer<TrustManager> consumer) throws IOException {
+        trustLock.writeLock().lock();
+
+        try {
+            if (!dirty) {
+                return;
+            }
+
+            consumer.accept(new Serializable<>(this));
+            dirty = false;
+        } finally {
+            trustLock.writeLock().unlock();
+        }
     }
 }

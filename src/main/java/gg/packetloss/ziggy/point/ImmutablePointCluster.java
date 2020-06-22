@@ -20,26 +20,18 @@
 
 package gg.packetloss.ziggy.point;
 
-import java.util.UUID;
+public class ImmutablePointCluster {
+    private final PointCluster cluster;
 
-public class AnnotatedPointCluster {
-    private final UUID owner;
-    private final ImmutablePointCluster pointCluster;
-
-    public AnnotatedPointCluster(UUID owner, ImmutablePointCluster pointCluster) {
-        this.owner = owner;
-        this.pointCluster = pointCluster;
+    public ImmutablePointCluster(PointCluster cluster) {
+        this.cluster = cluster;
     }
 
-    public AnnotatedPointCluster(UUID owner, PointCluster pointCluster) {
-        this(owner, new ImmutablePointCluster(pointCluster));
+    public ArrayPointSet getPoints() {
+        return cluster.getPoints();
     }
 
-    public UUID getOwner() {
-        return owner;
-    }
-
-    public ImmutablePointCluster getPointCluster() {
-        return pointCluster;
+    public boolean quickContains(Point2D point2D) {
+        return cluster.quickContains(point2D);
     }
 }
