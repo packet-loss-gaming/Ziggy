@@ -48,35 +48,52 @@ public class JarvisHull implements HullSolver {
         }
 
         // Find the left most point
-        int left = 0;
+        int startingPIdx = 0;
         for (int i = 0; i < points.size(); ++i) {
-            if (points.get(i).getX() < points.get(left).getX()) {
-                left = i;
+            if (points.get(i).getX() < points.get(startingPIdx).getX()) {
+                startingPIdx = i;
             }
         }
 
         ArrayPointSet hullPoints = new ArrayPointSet();
 
-        // Setup the left value
-        int p = left;
-        hullPoints.add(points.get(p));
+        // Set the starting point to the left most point which must always be on the hull
+        int currentPIdx = startingPIdx;
+        hullPoints.add(points.get(currentPIdx));
 
         while (true) {
-            int q = (p + 1) % points.size();
+            int nextPIdx = (currentPIdx + 1) % points.size();
 
-            for (int i = 0; i < points.size(); ++i) {
-                if (ccw(points.get(p), points.get(i), points.get(q)) == CCWState.COUNTERCLOCKWISE) {
-                    q = i;
+            for (int possiblePIdx = 0; possiblePIdx < points.size(); ++possiblePIdx) {
+                if (possiblePIdx == nextPIdx) {
+                    continue;
+                }
+
+                Point2D currentP = points.get(currentPIdx);
+                Point2D possibleP = points.get(possiblePIdx);
+                Point2D nextP = points.get(nextPIdx);
+
+                switch (ccw(currentP, possibleP, nextP)) {
+                    case COLINEAR: {
+                        if (possibleP.distanceSquared(currentP) > nextP.distanceSquared(currentP)) {
+                            nextPIdx = possiblePIdx;
+                        }
+                        break;
+                    }
+                    case COUNTERCLOCKWISE:
+                        nextPIdx = possiblePIdx;
+                    case CLOCKWISE:
+                        break;
                 }
             }
 
-            p = q;
+            currentPIdx = nextPIdx;
 
-            if (p == left) {
+            if (currentPIdx == startingPIdx) {
                 break;
             }
 
-            hullPoints.add(points.get(q));
+            hullPoints.add(points.get(nextPIdx));
         }
 
         return hullPoints;
