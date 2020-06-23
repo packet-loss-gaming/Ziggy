@@ -18,13 +18,11 @@
  *
  */
 
-package gg.packetloss.ziggy.point.hull;
+package gg.packetloss.ziggy;
 
-public class HullConstants {
-    public static final int MAX_SPAN = 100;
-    public static final int FLUSH_SPAN = MAX_SPAN / 4;
-    public static final int FLUSH_SPAN_SQ = FLUSH_SPAN * FLUSH_SPAN;
-    public static final int MAX_AREA = MAX_SPAN * MAX_SPAN;
-
-    private HullConstants() { }
+public class ZiggyConfig {
+    public int maxSpan = 100;
+    public int maxArea = maxSpan * maxSpan;
+    public int forceFlushDistance = 25;
+    public int flushDelay = 30;
 }

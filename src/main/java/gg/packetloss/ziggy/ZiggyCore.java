@@ -20,80 +20,50 @@
 
 package gg.packetloss.ziggy;
 
-import gg.packetloss.ziggy.abstraction.ZLocation;
-import gg.packetloss.ziggy.abstraction.ZWorld;
-import gg.packetloss.ziggy.point.AnnotatedPointCluster;
-import gg.packetloss.ziggy.point.ClusterManager;
-import gg.packetloss.ziggy.point.Point2D;
-import gg.packetloss.ziggy.serialization.ZiggySerializer;
-import gg.packetloss.ziggy.trust.TrustManager;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import gg.packetloss.ziggy.abstraction.ZTaskBuilder;
+import org.apache.commons.lang.Validate;
 
 public class ZiggyCore {
-    private final Map<String, ClusterManager> clusterManager;
-    private final TrustManager trustManager;
+    private static ZiggyCore inst;
 
-    public ZiggyCore(Map<String, ClusterManager> clusterManager, TrustManager trustManager) {
-        this.clusterManager = clusterManager;
-        this.trustManager = trustManager;
-    }
+    private ZTaskBuilder taskBuilder;
+    private ZiggyConfig config;
+    private ZiggyStateManager stateManager;
 
-    private ClusterManager getFor(ZWorld world) {
-        return clusterManager.compute(world.getName(), (ignored, value) -> {
-            if (value == null) {
-                value = new ClusterManager();
-            }
-            return value;
-        });
-    }
+    private ZiggyCore() { }
 
-    public List<AnnotatedPointCluster> getAffectedClusters(ZWorld world, Point2D point) {
-        return getFor(world).getClustersAt(point);
-    }
-
-    public List<AnnotatedPointCluster> getAffectedClusters(ZLocation location) {
-        return getAffectedClusters(location.getWorld(), location.getPosition().to2D());
-    }
-
-    public List<AnnotatedPointCluster> getClustersNear(ZWorld world, Point2D point) {
-        return getFor(world).getClustersNear(point);
-    }
-
-    public List<AnnotatedPointCluster> getClustersNear(ZLocation location) {
-        return getClustersNear(location.getWorld(), location.getPosition().to2D());
-    }
-
-    public void enqueue(UUID player, ZWorld world, Point2D point) {
-        getFor(world).enqueue(player, point);
-    }
-
-    public void enqueue(UUID player, ZLocation location) {
-        enqueue(player, location.getWorld(), location.getPosition().to2D());
-    }
-
-    public void applyTrustModification(UUID owner, UUID player, int adjustment) {
-        trustManager.adjustTrust(owner, player, adjustment);
-    }
-
-    public int getGlobalTrust(UUID player) {
-        return trustManager.getGlobalTrust(player);
-    }
-
-    public int getLocalTrust(UUID owner, UUID player) {
-        return trustManager.getLocalTrust(owner, player);
-    }
-
-    public void serializeWith(ZiggySerializer serializer) throws IOException {
-        for (Map.Entry<String, ClusterManager> entry : clusterManager.entrySet()) {
-            entry.getValue().writeToDisk(serializableCluster -> {
-                serializer.write(entry.getKey(), serializableCluster);
-            });
+    public static ZiggyCore inst() {
+        if (inst == null) {
+            inst = new ZiggyCore();
         }
 
-        trustManager.writeToDisk(serializer::write);
+        return inst;
+    }
+
+    public void registerTaskBuilder(ZTaskBuilder taskBuilder) {
+        Validate.isTrue(this.taskBuilder == null);
+        this.taskBuilder = taskBuilder;
+    }
+
+    public void registerConfig(ZiggyConfig config) {
+        Validate.isTrue(this.config == null);
+        this.config = config;
+    }
+
+    public void registerStateManager(ZiggyStateManager stateManager) {
+        Validate.isTrue(this.stateManager == null);
+        this.stateManager = stateManager;
+    }
+
+    public static ZTaskBuilder getTaskBuilder() {
+        return inst().taskBuilder;
+    }
+
+    public static ZiggyConfig getConfig() {
+        return inst().config;
+    }
+
+    public static ZiggyStateManager getStateManager() {
+        return inst().stateManager;
     }
 }

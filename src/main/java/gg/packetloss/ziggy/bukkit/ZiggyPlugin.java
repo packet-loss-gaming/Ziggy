@@ -20,7 +20,10 @@
 
 package gg.packetloss.ziggy.bukkit;
 
+import gg.packetloss.ziggy.ZiggyConfig;
 import gg.packetloss.ziggy.ZiggyCore;
+import gg.packetloss.ziggy.ZiggyStateManager;
+import gg.packetloss.ziggy.bukkit.abstraction.BukkitTaskBuilder;
 import gg.packetloss.ziggy.bukkit.listener.BukkitAdministrativeListener;
 import gg.packetloss.ziggy.bukkit.listener.BukkitPreventionListener;
 import gg.packetloss.ziggy.bukkit.listener.BukkitTrackingListener;
@@ -44,7 +47,7 @@ public class ZiggyPlugin extends JavaPlugin {
     private static ZiggyPlugin inst;
 
     private ZiggySerializer serializer;
-    private ZiggyCore core;
+    private ZiggyStateManager stateManager;
     private Tracker tracker;
     private Protector protector;
     private Admin admin;
@@ -64,12 +67,18 @@ public class ZiggyPlugin extends JavaPlugin {
         try {
             serializer = new ZiggyGsonSerializer(getSaveDataDirectory());
 
-            core = serializer.load();
-            tracker = new Tracker(core);
-            protector = new Protector(core);
-            admin = new Admin(core);
+            stateManager = serializer.load();
+            tracker = new Tracker(stateManager);
+            protector = new Protector(stateManager);
+            admin = new Admin(stateManager);
 
             inst = this;
+
+            // Setup Core
+            ZiggyCore core = ZiggyCore.inst();
+            core.registerTaskBuilder(new BukkitTaskBuilder());
+            core.registerStateManager(stateManager);
+            core.registerConfig(new ZiggyConfig());
 
             getLogger().info("Ziggy loaded successfully!");
         } catch (IOException e) {
@@ -85,7 +94,7 @@ public class ZiggyPlugin extends JavaPlugin {
 
     private void serialize() {
         try {
-            core.serializeWith(serializer);
+            stateManager.serializeWith(serializer);
         } catch (IOException e) {
             getLogger().severe("Ziggy failed to save state!");
             e.printStackTrace();

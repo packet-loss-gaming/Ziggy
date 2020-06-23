@@ -20,6 +20,8 @@
 
 package gg.packetloss.ziggy.point;
 
+import gg.packetloss.ziggy.ZiggyCore;
+import gg.packetloss.ziggy.abstraction.ZTask;
 import gg.packetloss.ziggy.point.hull.HullInterpreter;
 import gg.packetloss.ziggy.point.hull.HullSolver;
 import gg.packetloss.ziggy.point.hull.JarvisHull;
@@ -33,16 +35,12 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static gg.packetloss.ziggy.point.hull.HullConstants.FLUSH_SPAN_SQ;
-
 public class ClusterManager {
-    private static final int QUEUE_FLUSH_LENGTH = 4;
-
     private transient final HullSolver hullSolver = new JarvisHull();
     private transient final HullInterpreter hullInterpreter = new HullInterpreter();
 
     private final Map<UUID, List<PointCluster>> pointClusters = new HashMap<>();
-    private transient final Map<UUID, ArrayPointSet> pointQueue = new HashMap<>();
+    private transient final Map<UUID, PlayerPointQueue> pointQueue = new HashMap<>();
     private transient final List<Map.Entry<UUID, ArrayPointSet>> delayedPointQueue = new ArrayList<>();
 
     private transient boolean dirty = false;
@@ -103,30 +101,35 @@ public class ClusterManager {
     }
 
     private void flushQueueWithLock(UUID player) {
-        ArrayPointSet points = pointQueue.remove(player);
-        addPoints(player, points);
+        PlayerPointQueue queue = pointQueue.remove(player);
+        addPoints(player, queue.flush());
     }
 
     private void enqueueWithLock(UUID player, Point2D point) {
-        ArrayPointSet points = pointQueue.compute(player, (ignored, value) -> {
+        PlayerPointQueue points = pointQueue.compute(player, (ignored, value) -> {
             if (value == null) {
-                value = new ArrayPointSet();
+                value = new PlayerPointQueue();
             }
             return value;
         });
 
-        // Check to see if the distance of this point exceeds the maximum/we should split clusters
-        // to improve chances of good clustering
-        if (points.size() > 0 && points.get(points.size() - 1).distanceSquared(point) > FLUSH_SPAN_SQ) {
+        // If the new point is accepted by the current queue, defer to a new task
+        // if not, flush immediately then queue the new point in a new queue.
+        if (points.accept(point)) {
+            ZTask newTask = ZiggyCore.getTaskBuilder().createDelayedTask(() -> {
+                pointQueueLock.lock();
+
+                try {
+                    flushQueueWithLock(player);
+                } finally {
+                    pointQueueLock.unlock();
+                }
+            }, ZiggyCore.getConfig().flushDelay);
+
+            points.setNewTask(newTask);
+        } else {
             flushQueueWithLock(player);
             enqueueWithLock(player, point);
-            return;
-        }
-
-        // Add the point, then see if we have enough to force a flush
-        points.add(point);
-        if (points.size() >= QUEUE_FLUSH_LENGTH) {
-            flushQueueWithLock(player);
         }
     }
 

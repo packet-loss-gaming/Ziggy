@@ -18,16 +18,8 @@
  *
  */
 
-package gg.packetloss.ziggy.serialization;
+package gg.packetloss.ziggy.abstraction;
 
-import gg.packetloss.ziggy.ZiggyStateManager;
-import gg.packetloss.ziggy.point.ClusterManager;
-import gg.packetloss.ziggy.trust.TrustManager;
-
-import java.io.IOException;
-
-public interface ZiggySerializer {
-    public void write(String world, Serializable<ClusterManager> clusterManager) throws IOException;
-    public void write(Serializable<TrustManager> trustManager) throws IOException;
-    public ZiggyStateManager load() throws IOException;
+public interface ZTask {
+    public void cancel();
 }

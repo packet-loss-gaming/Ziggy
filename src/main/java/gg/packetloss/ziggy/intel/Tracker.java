@@ -20,7 +20,7 @@
 
 package gg.packetloss.ziggy.intel;
 
-import gg.packetloss.ziggy.ZiggyCore;
+import gg.packetloss.ziggy.ZiggyStateManager;
 import gg.packetloss.ziggy.abstraction.ZLocation;
 import gg.packetloss.ziggy.intel.context.BlockActionContext;
 import gg.packetloss.ziggy.intel.context.PlayerTrustContext;
@@ -37,11 +37,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class Tracker {
-    private final ZiggyCore core;
+    private final ZiggyStateManager core;
 
     private List<BlockActionMatcher> blockActionMatchers = new ArrayList<>();
 
-    public Tracker(ZiggyCore core) {
+    public Tracker(ZiggyStateManager core) {
         this.core = core;
 
         setupDefaultActionMatchers();

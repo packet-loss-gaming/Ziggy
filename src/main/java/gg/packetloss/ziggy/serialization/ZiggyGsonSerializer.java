@@ -21,7 +21,7 @@
 package gg.packetloss.ziggy.serialization;
 
 import com.google.gson.Gson;
-import gg.packetloss.ziggy.ZiggyCore;
+import gg.packetloss.ziggy.ZiggyStateManager;
 import gg.packetloss.ziggy.point.ClusterManager;
 import gg.packetloss.ziggy.trust.TrustManager;
 
@@ -85,7 +85,7 @@ public class ZiggyGsonSerializer implements ZiggySerializer {
     }
 
     @Override
-    public ZiggyCore load() throws IOException {
+    public ZiggyStateManager load() throws IOException {
         Map<String, ClusterManager> loadedClusters = new HashMap<>();
 
         if (Files.exists(getClustersDirectory())) {
@@ -109,6 +109,6 @@ public class ZiggyGsonSerializer implements ZiggySerializer {
             }
         }
 
-        return new ZiggyCore(loadedClusters, trustManager);
+        return new ZiggyStateManager(loadedClusters, trustManager);
     }
 }

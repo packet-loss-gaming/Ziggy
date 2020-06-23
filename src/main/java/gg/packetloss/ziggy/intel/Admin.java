@@ -20,16 +20,16 @@
 
 package gg.packetloss.ziggy.intel;
 
-import gg.packetloss.ziggy.ZiggyCore;
+import gg.packetloss.ziggy.ZiggyStateManager;
 import gg.packetloss.ziggy.abstraction.ZLocation;
 import gg.packetloss.ziggy.point.AnnotatedPointCluster;
 
 import java.util.List;
 
 public class Admin {
-    private final ZiggyCore core;
+    private final ZiggyStateManager core;
 
-    public Admin(ZiggyCore core) {
+    public Admin(ZiggyStateManager core) {
         this.core = core;
     }
 

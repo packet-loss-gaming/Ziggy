@@ -20,7 +20,7 @@
 
 package gg.packetloss.ziggy.intel;
 
-import gg.packetloss.ziggy.ZiggyCore;
+import gg.packetloss.ziggy.ZiggyStateManager;
 import gg.packetloss.ziggy.abstraction.ZLocation;
 import gg.packetloss.ziggy.abstraction.ZWorld;
 import gg.packetloss.ziggy.intel.context.BlockActionContext;
@@ -31,9 +31,9 @@ import java.util.List;
 import java.util.UUID;
 
 public class Protector {
-    private final ZiggyCore core;
+    private final ZiggyStateManager core;
 
-    public Protector(ZiggyCore core) {
+    public Protector(ZiggyStateManager core) {
         this.core = core;
     }
 

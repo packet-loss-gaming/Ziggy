@@ -20,23 +20,23 @@
 
 package gg.packetloss.ziggy.point.hull;
 
+import gg.packetloss.ziggy.ZiggyCore;
 import gg.packetloss.ziggy.point.ArrayPointSet;
 import gg.packetloss.ziggy.point.Point2D;
 import gg.packetloss.ziggy.point.PointCluster;
-
-import static gg.packetloss.ziggy.point.hull.HullConstants.MAX_AREA;
-import static gg.packetloss.ziggy.point.hull.HullConstants.MAX_SPAN;
 
 public class HullInterpreter {
     private boolean isBoundingValid(ArrayPointSet points) {
         PointCluster cluster = new PointCluster();
         cluster.setPoints(points);
 
-        return cluster.getWidth() < MAX_SPAN && cluster.getLength() < MAX_SPAN;
+        int maxSpan = ZiggyCore.getConfig().maxSpan;
+        return cluster.getWidth() < maxSpan && cluster.getLength() < maxSpan;
     }
 
     private boolean isAreaValid(ArrayPointSet points) {
-        return getArea(points) < MAX_AREA;
+        int maxArea = ZiggyCore.getConfig().maxArea;
+        return getArea(points) < maxArea;
     }
 
     public boolean isValid(ArrayPointSet points) {

@@ -18,16 +18,16 @@
  *
  */
 
-package gg.packetloss.ziggy.serialization;
+package gg.packetloss.ziggy.bukkit.abstraction;
 
-import gg.packetloss.ziggy.ZiggyStateManager;
-import gg.packetloss.ziggy.point.ClusterManager;
-import gg.packetloss.ziggy.trust.TrustManager;
+import gg.packetloss.ziggy.abstraction.ZTask;
+import gg.packetloss.ziggy.abstraction.ZTaskBuilder;
+import gg.packetloss.ziggy.bukkit.ZiggyPlugin;
+import org.bukkit.Bukkit;
 
-import java.io.IOException;
-
-public interface ZiggySerializer {
-    public void write(String world, Serializable<ClusterManager> clusterManager) throws IOException;
-    public void write(Serializable<TrustManager> trustManager) throws IOException;
-    public ZiggyStateManager load() throws IOException;
+public class BukkitTaskBuilder implements ZTaskBuilder {
+    @Override
+    public ZTask createDelayedTask(Runnable taskLogic, int delayedTicks) {
+        return new BukkitTask(Bukkit.getScheduler().runTaskLater(ZiggyPlugin.inst(), taskLogic, delayedTicks));
+    }
 }

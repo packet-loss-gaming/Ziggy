@@ -18,8 +18,19 @@
  *
  */
 
-package gg.packetloss.ziggy;
+package gg.packetloss.ziggy.bukkit.abstraction;
 
-public class ZiggyCoreConfig {
-    public int clusterMaxRadius = 10;
+import gg.packetloss.ziggy.abstraction.ZTask;
+
+public class BukkitTask implements ZTask {
+    private final org.bukkit.scheduler.BukkitTask underylingTask;
+
+    public BukkitTask(org.bukkit.scheduler.BukkitTask underylingTask) {
+        this.underylingTask = underylingTask;
+    }
+
+    @Override
+    public void cancel() {
+        underylingTask.cancel();
+    }
 }
