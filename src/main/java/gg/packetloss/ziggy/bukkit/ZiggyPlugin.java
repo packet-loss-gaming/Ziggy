@@ -65,6 +65,11 @@ public class ZiggyPlugin extends JavaPlugin {
     @Override
     public void onLoad() {
         try {
+            ZiggyCore core = ZiggyCore.inst();
+
+            // Config must be registered before we attempt to load
+            core.registerConfig(new ZiggyConfig());
+
             serializer = new ZiggyGsonSerializer(getSaveDataDirectory());
 
             stateManager = serializer.load();
@@ -74,11 +79,9 @@ public class ZiggyPlugin extends JavaPlugin {
 
             inst = this;
 
-            // Setup Core
-            ZiggyCore core = ZiggyCore.inst();
+            // Register state now that the plugin is fully loaded
             core.registerTaskBuilder(new BukkitTaskBuilder());
             core.registerStateManager(stateManager);
-            core.registerConfig(new ZiggyConfig());
 
             getLogger().info("Ziggy loaded successfully!");
         } catch (IOException e) {
