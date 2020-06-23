@@ -33,6 +33,8 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import static gg.packetloss.ziggy.point.hull.HullConstants.FLUSH_SPAN_SQ;
+
 public class ClusterManager {
     private static final int QUEUE_FLUSH_LENGTH = 4;
 
@@ -115,7 +117,7 @@ public class ClusterManager {
 
         // Check to see if the distance of this point exceeds the maximum/we should split clusters
         // to improve chances of good clustering
-        if (points.size() > 0 && points.get(points.size() - 1).distanceSquared(point) > 15 * 15) {
+        if (points.size() > 0 && points.get(points.size() - 1).distanceSquared(point) > FLUSH_SPAN_SQ) {
             flushQueueWithLock(player);
             enqueueWithLock(player, point);
             return;
