@@ -25,4 +25,8 @@ public class ZiggyConfig {
     public int maxArea = maxSpan * maxSpan;
     public int forceFlushDistance = 25;
     public int flushDelay = 30;
+
+    public int initialInvestment = 10;
+    public int investmentIncrement = 3;
+    public int investmentDecrement = 1;
 }

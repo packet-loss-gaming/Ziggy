@@ -27,6 +27,10 @@ public class ImmutablePointCluster {
         this.cluster = cluster;
     }
 
+    public int getInvestment() {
+        return cluster.getInvestment();
+    }
+
     public ArrayPointSet getPoints() {
         return cluster.getPoints();
     }

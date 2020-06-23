@@ -20,10 +20,16 @@
 
 package gg.packetloss.ziggy.point;
 
+import gg.packetloss.ziggy.ZiggyCore;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class PointCluster {
+    private long lastUpdate = System.currentTimeMillis();
+    private int investment = ZiggyCore.getConfig().initialInvestment;
+
     private List<Point2D> points = new ArrayList<>();
 
     private int minX;
@@ -31,11 +37,28 @@ public class PointCluster {
     private int minZ;
     private int maxZ;
 
+    public void increaseInvestment() {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastUpdate >= TimeUnit.DAYS.toMillis(1)) {
+            investment += ZiggyCore.getConfig().investmentIncrement;
+            lastUpdate = currentTime;
+        }
+    }
+
+    public boolean decayInvestment() {
+        investment -= ZiggyCore.getConfig().investmentDecrement;
+        return investment < 0;
+    }
+
+    public int getInvestment() {
+        return investment;
+    }
+
     public ArrayPointSet getPoints() {
         return new ArrayPointSet(points);
     }
 
-    private void flush() {
+    private void updateMinMax() {
         Point2D first = points.get(0);
 
         minX = first.getX();
@@ -59,7 +82,7 @@ public class PointCluster {
 
         this.points = points.asList();
 
-        flush();
+        updateMinMax();
     }
 
     public boolean quickContains(Point2D point2D) {

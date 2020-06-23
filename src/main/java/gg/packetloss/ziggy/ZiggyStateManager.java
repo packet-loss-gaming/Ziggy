@@ -87,6 +87,12 @@ public class ZiggyStateManager {
         return trustManager.getLocalTrust(owner, player);
     }
 
+    public void cleanup() {
+        for (ClusterManager manager : clusterManager.values()) {
+            manager.cleanup();
+        }
+    }
+
     public void serializeWith(ZiggySerializer serializer) throws IOException {
         for (Map.Entry<String, ClusterManager> entry : clusterManager.entrySet()) {
             entry.getValue().writeToDisk(serializableCluster -> {

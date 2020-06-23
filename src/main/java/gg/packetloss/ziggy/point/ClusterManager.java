@@ -65,6 +65,7 @@ public class ClusterManager {
 
             if (hullInterpreter.isValid(newPoints)) {
                 ownerCluster.setPoints(newPoints);
+                ownerCluster.increaseInvestment();
                 dirty = true;
                 return;
             }
@@ -74,6 +75,7 @@ public class ClusterManager {
         if (hullInterpreter.isValid(pointsToAdd)) {
             PointCluster cluster = new PointCluster();
             cluster.setPoints(pointsToAdd);
+            cluster.increaseInvestment();
             ownerClusters.add(cluster);
             dirty = true;
         }
@@ -205,6 +207,29 @@ public class ClusterManager {
             return getClustersWithLockNear(point);
         } finally {
             pointClusterLock.readLock().unlock();
+        }
+    }
+
+    private void cleanupWithLock() {
+        Iterator<Map.Entry<UUID, List<PointCluster>>> it = pointClusters.entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<UUID, List<PointCluster>> entry = it.next();
+
+            List<PointCluster> pointClusters = entry.getValue();
+            pointClusters.removeIf(PointCluster::decayInvestment);
+            if (pointClusters.isEmpty()) {
+                it.remove();
+            }
+        }
+    }
+
+    public void cleanup() {
+        pointClusterLock.writeLock().lock();
+
+        try {
+            cleanupWithLock();
+        } finally {
+            pointClusterLock.writeLock().unlock();
         }
     }
 
