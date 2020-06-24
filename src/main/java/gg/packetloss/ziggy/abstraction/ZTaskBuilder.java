@@ -21,5 +21,6 @@
 package gg.packetloss.ziggy.abstraction;
 
 public interface ZTaskBuilder {
+    public ZTask createAsyncTask(Runnable taskLogic);
     public ZTask createDelayedTask(Runnable taskLogic, int delayedTicks);
 }

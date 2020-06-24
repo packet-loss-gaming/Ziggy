@@ -27,6 +27,11 @@ import org.bukkit.Bukkit;
 
 public class BukkitTaskBuilder implements ZTaskBuilder {
     @Override
+    public ZTask createAsyncTask(Runnable taskLogic) {
+        return new BukkitTask(Bukkit.getScheduler().runTaskAsynchronously(ZiggyPlugin.inst(), taskLogic));
+    }
+
+    @Override
     public ZTask createDelayedTask(Runnable taskLogic, int delayedTicks) {
         return new BukkitTask(Bukkit.getScheduler().runTaskLater(ZiggyPlugin.inst(), taskLogic, delayedTicks));
     }

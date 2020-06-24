@@ -131,9 +131,17 @@ public class ClusterManager {
         }
     }
 
-    private void flushQueueWithLock(UUID player) {
-        PlayerPointQueue queue = pointQueue.remove(player);
-        addPoints(player, queue.flush());
+    private void flushQueue(UUID player) {
+        pointQueueLock.lock();
+
+        try {
+            PlayerPointQueue queue = pointQueue.remove(player);
+            ZiggyCore.getTaskBuilder().createAsyncTask(() -> {
+                addPoints(player, queue.flush());
+            });
+        } finally {
+            pointQueueLock.unlock();
+        }
     }
 
     private void enqueueWithLock(UUID player, Point2D point) {
@@ -148,18 +156,12 @@ public class ClusterManager {
         // if not, flush immediately then queue the new point in a new queue.
         if (points.accept(point)) {
             ZTask newTask = ZiggyCore.getTaskBuilder().createDelayedTask(() -> {
-                pointQueueLock.lock();
-
-                try {
-                    flushQueueWithLock(player);
-                } finally {
-                    pointQueueLock.unlock();
-                }
+                flushQueue(player);
             }, ZiggyCore.getConfig().flushDelay);
 
             points.setNewTask(newTask);
         } else {
-            flushQueueWithLock(player);
+            flushQueue(player);
             enqueueWithLock(player, point);
         }
     }
