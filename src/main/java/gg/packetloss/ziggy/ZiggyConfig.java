@@ -27,6 +27,6 @@ public class ZiggyConfig {
     public int flushDelay = 30;
 
     public int initialInvestment = 10;
-    public int investmentIncrement = 3;
+    public int investmentIncrement = 7;
     public int investmentDecrement = 1;
 }

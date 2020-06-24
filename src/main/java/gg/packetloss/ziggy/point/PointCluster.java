@@ -40,7 +40,7 @@ public class PointCluster {
     public void increaseInvestment() {
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastUpdate >= TimeUnit.DAYS.toMillis(1)) {
-            investment += ZiggyCore.getConfig().investmentIncrement;
+            investment += ZiggyCore.getConfig().investmentIncrement + ZiggyCore.getConfig().investmentDecrement;
             lastUpdate = currentTime;
         }
     }
