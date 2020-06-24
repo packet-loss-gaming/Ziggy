@@ -41,93 +41,102 @@ public class ClusterManager {
 
     private final Map<UUID, List<PointCluster>> pointClusters = new HashMap<>();
     private transient final Map<UUID, PlayerPointQueue> pointQueue = new HashMap<>();
-    private transient final List<Map.Entry<UUID, ArrayPointSet>> delayedPointQueue = new ArrayList<>();
 
     private transient boolean dirty = false;
 
     private transient ReadWriteLock pointClusterLock = new ReentrantReadWriteLock();
     private transient Lock pointQueueLock = new ReentrantLock();
-    private transient Lock delayedPointQueueLock = new ReentrantLock();
 
-    private List<PointCluster> getOwnerClustersWithLock(UUID owner) {
-        return pointClusters.compute(owner, (ignored, value) -> {
-            if (value == null) {
-                value = new ArrayList<>();
-            }
-            return value;
-        });
-    }
+    private List<PointCluster> getOwnerClusters(UUID owner) {
+        pointClusterLock.writeLock().lock();
 
-    private ClusterMatch getBestExistingMatchWithLock(List<PointCluster> ownerClusters, ArrayPointSet pointsToAdd) {
-        List<ClusterMatch> matches = new ArrayList<>();
-
-        // Try to add the points to an existing hull
-        for (PointCluster ownerCluster : ownerClusters) {
-            ArrayPointSet points = ownerCluster.getPoints();
-            points.addAll(pointsToAdd);
-            ClusterPointSet newPoints = hullSolver.hull(points);
-
-            if (hullInterpreter.isValid(newPoints)) {
-                matches.add(new ClusterMatch(ownerCluster, newPoints));
-            }
-        }
-
-        switch (matches.size()) {
-            case 0:
-                return null;
-            case 1:
-                return matches.get(0);
-            default:
-                matches.sort(Comparator.comparingLong(ClusterMatch::getArea));
-                return matches.get(0);
+        try {
+            return pointClusters.compute(owner, (ignored, value) -> {
+                if (value == null) {
+                    value = new ArrayList<>();
+                }
+                return value;
+            });
+        } finally {
+            pointClusterLock.writeLock().unlock();
         }
     }
 
-    private void addPointsWithLock(UUID owner, ArrayPointSet pointsToAdd) {
-        List<PointCluster> ownerClusters = getOwnerClustersWithLock(owner);
+    private ClusterMatch getBestExistingMatch(List<PointCluster> ownerClusters, ArrayPointSet pointsToAdd) {
+        pointClusterLock.readLock().lock();
 
-        // Try to match these points with an existing hull
-        ClusterMatch existingCluster = getBestExistingMatchWithLock(ownerClusters, pointsToAdd);
-        if (existingCluster != null) {
-            PointCluster ownerCluster = existingCluster.getCluster();
-            ownerCluster.setPoints(existingCluster.getNewPoints());
-            ownerCluster.increaseInvestment();
+        try {
+            List<ClusterMatch> matches = new ArrayList<>();
+
+            // Try to add the points to an existing hull
+            for (PointCluster ownerCluster : ownerClusters) {
+                ArrayPointSet points = ownerCluster.getPoints();
+                points.addAll(pointsToAdd);
+                ClusterPointSet newPoints = hullSolver.hull(points);
+
+                if (hullInterpreter.isValid(newPoints)) {
+                    matches.add(new ClusterMatch(ownerCluster, newPoints));
+                }
+            }
+
+            switch (matches.size()) {
+                case 0:
+                    return null;
+                case 1:
+                    return matches.get(0);
+                default:
+                    matches.sort(Comparator.comparingLong(ClusterMatch::getArea));
+                    return matches.get(0);
+            }
+        } finally {
+            pointClusterLock.readLock().unlock();
+        }
+    }
+
+    private void updatingExisting(PointCluster existingCluster, ClusterPointSet newPoints) {
+        pointClusterLock.writeLock().lock();
+
+        try {
+            existingCluster.setPoints(newPoints);
+            existingCluster.increaseInvestment();
 
             dirty = true;
+        } finally {
+            pointClusterLock.writeLock().unlock();
+        }
+    }
+
+    private void createNew(List<PointCluster> ownerClusters, ClusterPointSet newPoints) {
+        pointClusterLock.writeLock().lock();
+
+        try {
+            PointCluster cluster = new PointCluster();
+
+            cluster.setPoints(newPoints);
+            cluster.increaseInvestment();
+
+            ownerClusters.add(cluster);
+
+            dirty = true;
+        } finally {
+            pointClusterLock.writeLock().unlock();
+        }
+    }
+
+    public void addPoints(UUID owner, ArrayPointSet pointsToAdd) {
+        List<PointCluster> ownerClusters = getOwnerClusters(owner);
+
+        // Try to match these points with an existing hull
+        ClusterMatch existingCluster = getBestExistingMatch(ownerClusters, pointsToAdd);
+        if (existingCluster != null) {
+            updatingExisting(existingCluster.getCluster(), existingCluster.getNewPoints());
             return;
         }
 
         // Try to start a new hull with the points
         ClusterPointSet hulledPoints = hullSolver.hull(pointsToAdd);
         if (hullInterpreter.isValid(hulledPoints)) {
-            PointCluster cluster = new PointCluster();
-            cluster.setPoints(hulledPoints);
-            cluster.increaseInvestment();
-
-            ownerClusters.add(cluster);
-
-            dirty = true;
-        }
-    }
-
-    public void addPoints(UUID owner, ArrayPointSet pointsToAdd) {
-        // Try to get the main lock, if this fails, add this point set to a delayed queue
-        if (!pointClusterLock.writeLock().tryLock()) {
-            delayedPointQueueLock.lock();
-
-            try {
-                delayedPointQueue.add(new AbstractMap.SimpleEntry<>(owner, pointsToAdd));
-            } finally {
-                delayedPointQueueLock.unlock();
-            }
-
-            return;
-        }
-
-        try {
-            addPointsWithLock(owner, pointsToAdd);
-        } finally {
-            pointClusterLock.writeLock().unlock();
+            createNew(ownerClusters, hulledPoints);
         }
     }
 
@@ -266,20 +275,6 @@ public class ClusterManager {
         }
     }
 
-    private void replayDelayedWithLock() {
-        delayedPointQueueLock.lock();
-
-        try {
-            for (Map.Entry<UUID, ArrayPointSet> entry : delayedPointQueue) {
-                addPointsWithLock(entry.getKey(), entry.getValue());
-            }
-
-            delayedPointQueue.clear();
-        } finally {
-            delayedPointQueueLock.unlock();
-        }
-    }
-    
     public void writeToDisk(SerializationConsumer<ClusterManager> consumer) throws IOException {
         pointClusterLock.writeLock().lock();
 
@@ -290,8 +285,6 @@ public class ClusterManager {
 
             consumer.accept(new Serializable<>(this));
             dirty = false;
-
-            replayDelayedWithLock();
         } finally {
             pointClusterLock.writeLock().unlock();
         }
