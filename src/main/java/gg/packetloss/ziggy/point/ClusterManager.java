@@ -221,6 +221,8 @@ public class ClusterManager {
                 it.remove();
             }
         }
+
+        dirty = true;
     }
 
     public void cleanup() {
