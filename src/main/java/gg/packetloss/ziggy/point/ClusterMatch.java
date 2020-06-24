@@ -18,11 +18,31 @@
  *
  */
 
-package gg.packetloss.ziggy.point.hull;
+package gg.packetloss.ziggy.point;
 
-import gg.packetloss.ziggy.point.ArrayPointSet;
-import gg.packetloss.ziggy.point.ClusterPointSet;
+class ClusterMatch {
+    private final PointCluster cluster;
+    private final ClusterPointSet newPoints;
+    private long area = -1;
 
-public interface HullSolver {
-    public ClusterPointSet hull(ArrayPointSet points);
+    public ClusterMatch(PointCluster cluster, ClusterPointSet newPoints) {
+        this.cluster = cluster;
+        this.newPoints = newPoints;
+    }
+
+    public PointCluster getCluster() {
+        return cluster;
+    }
+
+    public ClusterPointSet getNewPoints() {
+        return newPoints;
+    }
+
+    public long getArea() {
+        if (area == -1) {
+            area = newPoints.getArea();
+        }
+
+        return area;
+    }
 }

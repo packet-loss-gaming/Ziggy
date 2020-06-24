@@ -117,4 +117,5 @@ public class ArrayPointSet implements Set<Point2D> {
     public List<Point2D> asList() {
         return new ArrayList<>(pointList);
     }
+
 }

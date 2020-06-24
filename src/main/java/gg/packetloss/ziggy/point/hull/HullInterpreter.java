@@ -21,12 +21,11 @@
 package gg.packetloss.ziggy.point.hull;
 
 import gg.packetloss.ziggy.ZiggyCore;
-import gg.packetloss.ziggy.point.ArrayPointSet;
-import gg.packetloss.ziggy.point.Point2D;
+import gg.packetloss.ziggy.point.ClusterPointSet;
 import gg.packetloss.ziggy.point.PointCluster;
 
 public class HullInterpreter {
-    private boolean isBoundingValid(ArrayPointSet points) {
+    private boolean isBoundingValid(ClusterPointSet points) {
         PointCluster cluster = new PointCluster();
         cluster.setPoints(points);
 
@@ -34,32 +33,16 @@ public class HullInterpreter {
         return cluster.getWidth() < maxSpan && cluster.getLength() < maxSpan;
     }
 
-    private boolean isAreaValid(ArrayPointSet points) {
+    private boolean isAreaValid(ClusterPointSet points) {
         int maxArea = ZiggyCore.getConfig().maxArea;
-        return getArea(points) < maxArea;
+        return points.getArea() < maxArea;
     }
 
-    public boolean isValid(ArrayPointSet points) {
+    public boolean isValid(ClusterPointSet points) {
         if (points.size() < 3) {
             return false;
         }
 
         return isBoundingValid(points) && isAreaValid(points);
-    }
-
-    public long getArea(ArrayPointSet points) {
-        double area = 0;
-
-        Point2D lastSeenPoint = points.get(points.size() - 1);
-        for (Point2D currentPoint : points) {
-            double xSum = lastSeenPoint.getX() + currentPoint.getX();
-            double zDiff = lastSeenPoint.getZ() - currentPoint.getZ();
-
-            area += xSum * zDiff;
-
-            lastSeenPoint = currentPoint;
-        }
-
-        return Math.round(Math.abs(area / 2));
     }
 }

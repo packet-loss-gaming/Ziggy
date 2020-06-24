@@ -21,6 +21,7 @@
 package gg.packetloss.ziggy.point.hull;
 
 import gg.packetloss.ziggy.point.ArrayPointSet;
+import gg.packetloss.ziggy.point.ClusterPointSet;
 import gg.packetloss.ziggy.point.Point2D;
 
 public class JarvisHull implements HullSolver {
@@ -42,9 +43,9 @@ public class JarvisHull implements HullSolver {
     }
 
     @Override
-    public ArrayPointSet hull(ArrayPointSet points) {
+    public ClusterPointSet hull(ArrayPointSet points) {
         if (points.size() < 4) {
-            return new ArrayPointSet(points);
+            return new ClusterPointSet(points);
         }
 
         // Find the left most point
@@ -55,7 +56,7 @@ public class JarvisHull implements HullSolver {
             }
         }
 
-        ArrayPointSet hullPoints = new ArrayPointSet();
+        ClusterPointSet hullPoints = new ClusterPointSet();
 
         // Set the starting point to the left most point which must always be on the hull
         int currentPIdx = startingPIdx;

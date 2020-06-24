@@ -54,8 +54,8 @@ public class PointCluster {
         return investment;
     }
 
-    public ArrayPointSet getPoints() {
-        return new ArrayPointSet(points);
+    public ClusterPointSet getPoints() {
+        return new ClusterPointSet(points);
     }
 
     private void updateMinMax() {
@@ -77,7 +77,7 @@ public class PointCluster {
         }
     }
 
-    public void setPoints(ArrayPointSet points) {
+    public void setPoints(ClusterPointSet points) {
         assert points.size() > 0;
 
         this.points = points.asList();

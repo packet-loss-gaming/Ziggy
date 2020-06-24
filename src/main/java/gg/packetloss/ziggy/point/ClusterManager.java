@@ -49,34 +49,63 @@ public class ClusterManager {
     private transient Lock pointQueueLock = new ReentrantLock();
     private transient Lock delayedPointQueueLock = new ReentrantLock();
 
-    private void addPointsWithLock(UUID owner, ArrayPointSet pointsToAdd) {
-        List<PointCluster> ownerClusters = pointClusters.compute(owner, (ignored, value) -> {
+    private List<PointCluster> getOwnerClustersWithLock(UUID owner) {
+        return pointClusters.compute(owner, (ignored, value) -> {
             if (value == null) {
                 value = new ArrayList<>();
             }
             return value;
         });
+    }
+
+    private ClusterMatch getBestExistingMatchWithLock(List<PointCluster> ownerClusters, ArrayPointSet pointsToAdd) {
+        List<ClusterMatch> matches = new ArrayList<>();
 
         // Try to add the points to an existing hull
         for (PointCluster ownerCluster : ownerClusters) {
             ArrayPointSet points = ownerCluster.getPoints();
             points.addAll(pointsToAdd);
-            ArrayPointSet newPoints = hullSolver.hull(points);
+            ClusterPointSet newPoints = hullSolver.hull(points);
 
             if (hullInterpreter.isValid(newPoints)) {
-                ownerCluster.setPoints(newPoints);
-                ownerCluster.increaseInvestment();
-                dirty = true;
-                return;
+                matches.add(new ClusterMatch(ownerCluster, newPoints));
             }
         }
 
+        switch (matches.size()) {
+            case 0:
+                return null;
+            case 1:
+                return matches.get(0);
+            default:
+                matches.sort(Comparator.comparingLong(ClusterMatch::getArea));
+                return matches.get(0);
+        }
+    }
+
+    private void addPointsWithLock(UUID owner, ArrayPointSet pointsToAdd) {
+        List<PointCluster> ownerClusters = getOwnerClustersWithLock(owner);
+
+        // Try to match these points with an existing hull
+        ClusterMatch existingCluster = getBestExistingMatchWithLock(ownerClusters, pointsToAdd);
+        if (existingCluster != null) {
+            PointCluster ownerCluster = existingCluster.getCluster();
+            ownerCluster.setPoints(existingCluster.getNewPoints());
+            ownerCluster.increaseInvestment();
+
+            dirty = true;
+            return;
+        }
+
         // Try to start a new hull with the points
-        if (hullInterpreter.isValid(pointsToAdd)) {
+        ClusterPointSet hulledPoints = hullSolver.hull(pointsToAdd);
+        if (hullInterpreter.isValid(hulledPoints)) {
             PointCluster cluster = new PointCluster();
-            cluster.setPoints(pointsToAdd);
+            cluster.setPoints(hulledPoints);
             cluster.increaseInvestment();
+
             ownerClusters.add(cluster);
+
             dirty = true;
         }
     }
@@ -155,14 +184,14 @@ public class ClusterManager {
                     continue;
                 }
 
-                ArrayPointSet points = cluster.getPoints();
+                ClusterPointSet points = cluster.getPoints();
 
                 // Calculate original area
-                long originalArea = hullInterpreter.getArea(points);
+                long originalArea = points.getArea();
 
                 // Calculate new area
                 points.add(point);
-                long newArea = hullInterpreter.getArea(hullSolver.hull(points));
+                long newArea = hullSolver.hull(points).getArea();
 
                 if (newArea <= originalArea) {
                     annotatedPointClusters.add(new AnnotatedPointCluster(entry.getKey(), cluster));
