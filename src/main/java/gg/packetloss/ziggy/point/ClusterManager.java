@@ -276,7 +276,10 @@ public class ClusterManager {
     }
 
     public void writeToDisk(SerializationConsumer<ClusterManager> consumer) throws IOException {
-        pointClusterLock.writeLock().lock();
+        // If we don't get the lock immediately come back later, writing to disk is low priority.
+        if (!pointClusterLock.writeLock().tryLock()) {
+            return;
+        }
 
         try {
             if (!dirty) {
