@@ -46,4 +46,9 @@ public class Point3D {
     public Point2D to2D() {
         return new Point2D(x, z);
     }
+
+    @Override
+    public String toString() {
+        return "{" + x + "," + y + "," + z + "}";
+    }
 }

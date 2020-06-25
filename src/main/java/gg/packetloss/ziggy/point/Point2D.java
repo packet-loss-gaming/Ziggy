@@ -53,4 +53,9 @@ public class Point2D {
     public int hashCode() {
         return (x << 16) ^ z;
     }
+
+    @Override
+    public String toString() {
+        return "{" + x + "," + z + "}";
+    }
 }
