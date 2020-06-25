@@ -23,8 +23,8 @@ package gg.packetloss.ziggy;
 public class ZiggyConfig {
     public int maxSpan = 100;
     public int maxArea = maxSpan * maxSpan;
-    public int forceFlushDistance = 25;
-    public int flushDelay = 30;
+    public int forceFlushDistance = 6;
+    public int flushDelay = 50;
 
     public int initialInvestment = 10;
     public int investmentIncrement = 7;

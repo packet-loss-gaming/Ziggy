@@ -47,13 +47,20 @@ public class HullInterpreter {
     }
 
     private boolean isAcceptableGrowth(PointCluster cluster, PointCluster newCluster) {
+        // The max change size is twice the force flush distance so that missing a couple of blocks
+        // doesn't end up causing a new region to form.
+        //
+        // NOTE: Changes to this logic need to make sure they
+        //       won't be incompatible with force flush.
+        final int maxChangeSize = ZiggyCore.getConfig().forceFlushDistance * 2;
+
         int lengthChange = newCluster.getLength() - cluster.getLength();
-        if (lengthChange >= ZiggyCore.getConfig().forceFlushDistance) {
+        if (lengthChange > maxChangeSize) {
             return false;
         }
 
         int widthChange = newCluster.getWidth() - cluster.getWidth();
-        if (widthChange >= ZiggyCore.getConfig().forceFlushDistance) {
+        if (widthChange > maxChangeSize) {
             return false;
         }
 

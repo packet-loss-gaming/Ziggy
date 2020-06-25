@@ -35,8 +35,12 @@ public class PlayerPointQueue {
     }
 
     public boolean accept(Point2D point) {
-        double forceFlushDistanceSq = Math.pow(ZiggyCore.getConfig().forceFlushDistance, 2);
-        if (points.size() > 0 && points.get(points.size() - 1).distanceSquared(point) > forceFlushDistanceSq) {
+        // Subtract one to factor in maximum block bounds
+        //
+        // NOTE: Changes to this logic need to make sure they won't be
+        //       incompatible with acceptable growth enforcement.
+        double forceFlushDistanceSq = Math.pow(ZiggyCore.getConfig().forceFlushDistance - 1, 2);
+        if (points.size() > 0 && points.get(0).distanceSquared(point) > forceFlushDistanceSq) {
             return false;
         }
 
