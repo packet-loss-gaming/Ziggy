@@ -45,4 +45,24 @@ public class HullInterpreter {
 
         return isBoundingValid(points) && isAreaValid(points);
     }
+
+    private boolean isAcceptableGrowth(PointCluster cluster, PointCluster newCluster) {
+        int lengthChange = newCluster.getLength() - cluster.getLength();
+        if (lengthChange >= ZiggyCore.getConfig().forceFlushDistance) {
+            return false;
+        }
+
+        int widthChange = newCluster.getWidth() - cluster.getWidth();
+        if (widthChange >= ZiggyCore.getConfig().forceFlushDistance) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public boolean isAcceptableGrowth(PointCluster cluster, ClusterPointSet newPoints) {
+        PointCluster newCluster = new PointCluster();
+        newCluster.setPoints(newPoints);
+        return isAcceptableGrowth(cluster, newCluster);
+    }
 }

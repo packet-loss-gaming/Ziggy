@@ -74,7 +74,7 @@ public class ClusterManager {
                 points.addAll(pointsToAdd);
                 ClusterPointSet newPoints = hullSolver.hull(points);
 
-                if (hullInterpreter.isValid(newPoints)) {
+                if (hullInterpreter.isValid(newPoints) && hullInterpreter.isAcceptableGrowth(ownerCluster, newPoints)) {
                     matches.add(new ClusterMatch(ownerCluster, newPoints));
                 }
             }
