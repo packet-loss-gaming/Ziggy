@@ -26,7 +26,8 @@ public class ZiggyConfig {
     public int forceFlushDistance = 6;
     public int flushDelay = 50;
 
-    public int initialInvestment = 10;
+    public int initialInvestment = 5;
+    public int continuedUseInvestmentFloor = 30;
     public int investmentIncrement = 7;
     public int investmentDecrement = 1;
 }
