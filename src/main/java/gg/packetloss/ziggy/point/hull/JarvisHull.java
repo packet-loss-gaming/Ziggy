@@ -44,8 +44,8 @@ public class JarvisHull implements HullSolver {
 
     @Override
     public ClusterPointSet hull(ArrayPointSet points) {
-        if (points.size() < 4) {
-            return new ClusterPointSet(points);
+        if (points.size() < 3) {
+            return new ClusterPointSet();
         }
 
         // Find the left most point
@@ -94,7 +94,10 @@ public class JarvisHull implements HullSolver {
                 break;
             }
 
-            hullPoints.add(points.get(nextPIdx));
+            Point2D addedPoint = points.get(currentPIdx);
+            if (!hullPoints.add(addedPoint)) {
+                throw new IllegalStateException("The same point " + addedPoint + " was added to the hull twice!");
+            }
         }
 
         return hullPoints;
