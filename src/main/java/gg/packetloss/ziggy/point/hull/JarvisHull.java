@@ -51,8 +51,14 @@ public class JarvisHull implements HullSolver {
         // Find the left most point
         int startingPIdx = 0;
         for (int i = 0; i < points.size(); ++i) {
-            if (points.get(i).getX() < points.get(startingPIdx).getX()) {
+            Point2D currentPoint = points.get(i);
+            Point2D startingPoint = points.get(startingPIdx);
+            if (currentPoint.getX() < startingPoint.getX()) {
                 startingPIdx = i;
+            } else if (currentPoint.getX() == startingPoint.getX()) {
+                if (currentPoint.getZ() < startingPoint.getZ()) {
+                    startingPIdx = i;
+                }
             }
         }
 
