@@ -39,9 +39,16 @@ public class PointCluster {
 
     public void increaseInvestment() {
         long currentTime = System.currentTimeMillis();
+        // NOTE: This is intentionally not true upon initial creation so that point clusters
+        //       used only once are not given the same degree of protection as one that's been worked
+        //       on repeatedly.
         if (currentTime - lastUpdate >= TimeUnit.DAYS.toMillis(1)) {
-            investment += ZiggyCore.getConfig().investmentIncrement + ZiggyCore.getConfig().investmentDecrement;
-            investment = Math.max(investment, ZiggyCore.getConfig().continuedUseInvestmentFloor);
+            // Choose between an incremental investment, and the investment floor.
+            investment = Math.max(
+                    investment + ZiggyCore.getConfig().investmentIncrement,
+                    ZiggyCore.getConfig().continuedUseInvestmentFloor
+            );
+            investment += ZiggyCore.getConfig().investmentDecrement;
 
             lastUpdate = currentTime;
         }
