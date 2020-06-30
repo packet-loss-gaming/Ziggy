@@ -42,6 +42,11 @@ public class BukkitWorld implements ZWorld {
     }
 
     @Override
+    public String getFriendlyName() {
+        return world.getName();
+    }
+
+    @Override
     public ZBlockInfo getInfoAt(Point3D point) {
         return new BukkitBlockInfo(world.getBlockAt(point.getX(), point.getY(), point.getZ()).getBlockData());
     }

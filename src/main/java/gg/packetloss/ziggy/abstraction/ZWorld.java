@@ -26,6 +26,7 @@ import java.util.UUID;
 
 public interface ZWorld {
     public String getName();
+    public String getFriendlyName();
     public ZBlockInfo getInfoAt(Point3D point);
 
     public boolean isVisibleChange(UUID owner, UUID player);

@@ -29,9 +29,7 @@ import gg.packetloss.ziggy.serialization.ZiggySerializer;
 import gg.packetloss.ziggy.trust.TrustManager;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class ZiggyStateManager {
     private final Map<String, ClusterManager> clusterManager;
@@ -42,17 +40,21 @@ public class ZiggyStateManager {
         this.trustManager = trustManager;
     }
 
-    private ClusterManager getFor(ZWorld world) {
-        return clusterManager.compute(world.getName(), (ignored, value) -> {
+    private Optional<ClusterManager> getFor(ZWorld world) {
+        if (ZiggyCore.getConfig().ignoredWorlds.contains(world.getFriendlyName())) {
+            return Optional.empty();
+        }
+
+        return Optional.of(clusterManager.compute(world.getName(), (ignored, value) -> {
             if (value == null) {
                 value = new ClusterManager();
             }
             return value;
-        });
+        }));
     }
 
     public List<AnnotatedPointCluster> getAffectedClusters(ZWorld world, Point2D point) {
-        return getFor(world).getClustersAt(point);
+        return getFor(world).map(clusterManager -> clusterManager.getClustersAt(point)).orElse(new ArrayList<>());
     }
 
     public List<AnnotatedPointCluster> getAffectedClusters(ZLocation location) {
@@ -60,7 +62,7 @@ public class ZiggyStateManager {
     }
 
     public List<AnnotatedPointCluster> getClustersNear(ZWorld world, Point2D point) {
-        return getFor(world).getClustersNear(point);
+        return getFor(world).map(clusterManager -> clusterManager.getClustersNear(point)).orElse(new ArrayList<>());
     }
 
     public List<AnnotatedPointCluster> getClustersNear(ZLocation location) {
@@ -68,7 +70,7 @@ public class ZiggyStateManager {
     }
 
     public void enqueue(UUID player, ZWorld world, Point2D point) {
-        getFor(world).enqueue(player, point);
+        getFor(world).ifPresent(clusterManager -> clusterManager.enqueue(player, point));
     }
 
     public void enqueue(UUID player, ZLocation location) {

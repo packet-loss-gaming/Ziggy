@@ -20,6 +20,8 @@
 
 package gg.packetloss.ziggy;
 
+import java.util.Set;
+
 public class ZiggyConfig {
     public int maxSpan = 100;
     public int maxArea = maxSpan * maxSpan;
@@ -30,4 +32,6 @@ public class ZiggyConfig {
     public int continuedUseInvestmentFloor = 30;
     public int investmentIncrement = 7;
     public int investmentDecrement = 1;
+
+    public Set<String> ignoredWorlds = Set.of("City");
 }
