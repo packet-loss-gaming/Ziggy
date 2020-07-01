@@ -26,5 +26,5 @@ import gg.packetloss.ziggy.intel.context.PlayerTrustContext;
 public interface BlockActionMatcher {
     public boolean matches(BlockActionContext blockContext);
     public int getTrustAdjustmentInContext(BlockActionContext blockContext, PlayerTrustContext trustContext);
-    public boolean isQueuingEvent();
+    public EventClassification classifyEvent(BlockActionContext blockContext);
 }

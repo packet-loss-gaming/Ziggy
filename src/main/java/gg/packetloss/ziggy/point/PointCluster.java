@@ -21,6 +21,7 @@
 package gg.packetloss.ziggy.point;
 
 import gg.packetloss.ziggy.ZiggyCore;
+import gg.packetloss.ziggy.abstraction.BlockClassification;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 public class PointCluster {
     private long lastUpdate = System.currentTimeMillis();
     private int investment = ZiggyCore.getConfig().initialInvestment;
+    private BlockClassification currentClassification = BlockClassification.UNDECIDED;
 
     private List<Point2D> points = new ArrayList<>();
 
@@ -86,10 +88,15 @@ public class PointCluster {
         }
     }
 
-    public void setPoints(ClusterPointSet points) {
+    public boolean acceptsBlocksOfClassification(BlockClassification classification) {
+        return currentClassification.compatibleWith(classification);
+    }
+
+    public void setPoints(ClusterPointSet points, BlockClassification classification) {
         assert points.size() > 0;
 
         this.points = points.asList();
+        this.currentClassification = classification;
 
         updateMinMax();
     }

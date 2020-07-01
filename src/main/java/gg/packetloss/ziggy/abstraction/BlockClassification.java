@@ -20,19 +20,16 @@
 
 package gg.packetloss.ziggy.abstraction;
 
-class ZDummyInfo implements ZBlockInfo {
-    @Override
-    public boolean isAir() {
-        return true;
-    }
+public enum  BlockClassification {
+    STRUCTURAL,
+    ENVIRONMENTAL,
+    UNDECIDED;
 
-    @Override
-    public boolean isContainer() {
-        return false;
-    }
+    public boolean compatibleWith(BlockClassification classification) {
+        if (this == UNDECIDED || classification == UNDECIDED) {
+            return true;
+        }
 
-    @Override
-    public BlockClassification classify() {
-        return BlockClassification.UNDECIDED;
+        return this == classification;
     }
 }

@@ -25,6 +25,7 @@ import gg.packetloss.ziggy.abstraction.ZLocation;
 import gg.packetloss.ziggy.intel.context.BlockActionContext;
 import gg.packetloss.ziggy.intel.context.PlayerTrustContext;
 import gg.packetloss.ziggy.intel.matcher.BlockActionMatcher;
+import gg.packetloss.ziggy.intel.matcher.EventClassification;
 import gg.packetloss.ziggy.intel.matcher.builtin.AnyBlockAddActionMatcher;
 import gg.packetloss.ziggy.intel.matcher.builtin.AnyBlockRemoveActionMatcher;
 import gg.packetloss.ziggy.intel.matcher.builtin.ContainerAddActionMatcher;
@@ -71,10 +72,10 @@ public class Tracker {
         return Optional.empty();
     }
 
-    public void trackBlockAction(BlockActionContext blockAction) {
-        getMatcher(blockAction).ifPresent((matcher) -> {
-            UUID player = blockAction.getPlayer();
-            ZLocation location = blockAction.getLocation();
+    public void trackBlockAction(BlockActionContext blockContext) {
+        getMatcher(blockContext).ifPresent((matcher) -> {
+            UUID player = blockContext.getPlayer();
+            ZLocation location = blockContext.getLocation();
 
             List<AnnotatedPointCluster> pointClusters = core.getAffectedClusters(location);
             for (AnnotatedPointCluster pointCluster : pointClusters) {
@@ -86,11 +87,12 @@ public class Tracker {
                         core.getLocalTrust(owner, player)
                 );
 
-                core.applyTrustModification(owner, player, matcher.getTrustAdjustmentInContext(blockAction, trustContext));
+                core.applyTrustModification(owner, player, matcher.getTrustAdjustmentInContext(blockContext, trustContext));
             }
 
-            if (matcher.isQueuingEvent()) {
-                core.enqueue(player, location);
+            EventClassification classification = matcher.classifyEvent(blockContext);
+            if (classification.isQueueing()) {
+                core.enqueue(player, location, classification.getBaseClassification());
             }
         });
     }

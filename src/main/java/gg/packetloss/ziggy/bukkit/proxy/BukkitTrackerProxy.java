@@ -40,7 +40,7 @@ public class BukkitTrackerProxy {
                 player.getUniqueId(),
                 new BukkitLocation(block),
                 ZBlockInfo.IRRELEVANT,
-                new BukkitBlockInfo(block.getBlockData())
+                new BukkitBlockInfo(block.getBlockData(), block.getBiome())
         ));
     }
 
@@ -48,7 +48,7 @@ public class BukkitTrackerProxy {
         tracker.trackBlockAction(new BlockActionContext(
                 player.getUniqueId(),
                 new BukkitLocation(block),
-                new BukkitBlockInfo(block.getBlockData()),
+                new BukkitBlockInfo(block.getBlockData(), block.getBiome()),
                 ZBlockInfo.IRRELEVANT
         ));
     }

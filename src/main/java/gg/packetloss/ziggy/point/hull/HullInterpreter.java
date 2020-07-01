@@ -21,13 +21,14 @@
 package gg.packetloss.ziggy.point.hull;
 
 import gg.packetloss.ziggy.ZiggyCore;
+import gg.packetloss.ziggy.abstraction.BlockClassification;
 import gg.packetloss.ziggy.point.ClusterPointSet;
 import gg.packetloss.ziggy.point.PointCluster;
 
 public class HullInterpreter {
     private boolean isBoundingValid(ClusterPointSet points) {
         PointCluster cluster = new PointCluster();
-        cluster.setPoints(points);
+        cluster.setPoints(points, BlockClassification.UNDECIDED);
 
         int maxSpan = ZiggyCore.getConfig().maxSpan;
         return cluster.getWidth() < maxSpan && cluster.getLength() < maxSpan;
@@ -69,7 +70,7 @@ public class HullInterpreter {
 
     public boolean isAcceptableGrowth(PointCluster cluster, ClusterPointSet newPoints) {
         PointCluster newCluster = new PointCluster();
-        newCluster.setPoints(newPoints);
+        newCluster.setPoints(newPoints, BlockClassification.UNDECIDED);
         return isAcceptableGrowth(cluster, newCluster);
     }
 }

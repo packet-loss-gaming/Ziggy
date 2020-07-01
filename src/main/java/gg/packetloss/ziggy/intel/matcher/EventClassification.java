@@ -18,39 +18,29 @@
  *
  */
 
-package gg.packetloss.ziggy.point;
+package gg.packetloss.ziggy.intel.matcher;
 
 import gg.packetloss.ziggy.abstraction.BlockClassification;
 
-class ClusterMatch {
-    private final PointCluster cluster;
-    private final ClusterPointSet newPoints;
-    private final BlockClassification classification;
-    private long area = -1;
+public enum EventClassification {
+    BLOCK_REMOVAL(false, BlockClassification.UNDECIDED),
+    STRUCTURE_ADD(true, BlockClassification.STRUCTURAL),
+    ENVIRONMENT_ADD(true, BlockClassification.ENVIRONMENTAL),
+    UNDECIDED_ADD(true, BlockClassification.UNDECIDED);
 
-    public ClusterMatch(PointCluster cluster, ClusterPointSet newPoints, BlockClassification classification) {
-        this.cluster = cluster;
-        this.newPoints = newPoints;
-        this.classification = classification;
+    private final boolean isQueueing;
+    private final BlockClassification baseClassification;
+
+    private EventClassification(boolean isQueueing, BlockClassification baseClassification) {
+        this.isQueueing = isQueueing;
+        this.baseClassification = baseClassification;
     }
 
-    public PointCluster getCluster() {
-        return cluster;
+    public boolean isQueueing() {
+        return isQueueing;
     }
 
-    public ClusterPointSet getNewPoints() {
-        return newPoints;
-    }
-
-    public BlockClassification getClassification() {
-        return classification;
-    }
-
-    public long getArea() {
-        if (area == -1) {
-            area = newPoints.getArea();
-        }
-
-        return area;
+    public BlockClassification getBaseClassification() {
+        return baseClassification;
     }
 }

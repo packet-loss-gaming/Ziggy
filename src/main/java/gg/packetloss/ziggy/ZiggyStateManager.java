@@ -20,6 +20,7 @@
 
 package gg.packetloss.ziggy;
 
+import gg.packetloss.ziggy.abstraction.BlockClassification;
 import gg.packetloss.ziggy.abstraction.ZLocation;
 import gg.packetloss.ziggy.abstraction.ZWorld;
 import gg.packetloss.ziggy.point.AnnotatedPointCluster;
@@ -69,12 +70,12 @@ public class ZiggyStateManager {
         return getClustersNear(location.getWorld(), location.getPosition().to2D());
     }
 
-    public void enqueue(UUID player, ZWorld world, Point2D point) {
-        getFor(world).ifPresent(clusterManager -> clusterManager.enqueue(player, point));
+    public void enqueue(UUID player, ZWorld world, Point2D point, BlockClassification classification) {
+        getFor(world).ifPresent(clusterManager -> clusterManager.enqueue(player, point, classification));
     }
 
-    public void enqueue(UUID player, ZLocation location) {
-        enqueue(player, location.getWorld(), location.getPosition().to2D());
+    public void enqueue(UUID player, ZLocation location, BlockClassification classification) {
+        enqueue(player, location.getWorld(), location.getPosition().to2D(), classification);
     }
 
     public void applyTrustModification(UUID owner, UUID player, int adjustment) {

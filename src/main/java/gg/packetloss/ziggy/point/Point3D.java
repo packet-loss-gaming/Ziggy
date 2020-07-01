@@ -43,6 +43,10 @@ public class Point3D {
         return z;
     }
 
+    public Point3D add(int x, int y, int z) {
+        return new Point3D(this.x + x, this.y + y, this.z + z);
+    }
+
     public Point2D to2D() {
         return new Point2D(x, z);
     }

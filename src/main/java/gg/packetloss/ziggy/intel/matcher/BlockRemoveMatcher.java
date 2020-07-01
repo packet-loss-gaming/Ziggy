@@ -20,9 +20,11 @@
 
 package gg.packetloss.ziggy.intel.matcher;
 
+import gg.packetloss.ziggy.intel.context.BlockActionContext;
+
 public interface BlockRemoveMatcher extends BlockActionMatcher {
     @Override
-    public default boolean isQueuingEvent() {
-        return false;
+    public default EventClassification classifyEvent(BlockActionContext blockContext) {
+        return EventClassification.BLOCK_REMOVAL;
     }
 }

@@ -21,6 +21,7 @@
 package gg.packetloss.ziggy.point;
 
 import gg.packetloss.ziggy.ZiggyCore;
+import gg.packetloss.ziggy.abstraction.BlockClassification;
 import gg.packetloss.ziggy.abstraction.ZTask;
 import gg.packetloss.ziggy.point.hull.HullInterpreter;
 import gg.packetloss.ziggy.point.hull.HullSolver;
@@ -62,7 +63,7 @@ public class ClusterManager {
         }
     }
 
-    private ClusterMatch getBestExistingMatch(List<PointCluster> ownerClusters, ArrayPointSet pointsToAdd) {
+    private ClusterMatch getBestExistingMatch(List<PointCluster> ownerClusters, PlayerPointQueue pointsToAdd) {
         pointClusterLock.readLock().lock();
 
         try {
@@ -70,12 +71,17 @@ public class ClusterManager {
 
             // Try to add the points to an existing hull
             for (PointCluster ownerCluster : ownerClusters) {
+                // Check to see if this is a compatible cluster
+                if (!ownerCluster.acceptsBlocksOfClassification(pointsToAdd.getClassification())) {
+                    continue;
+                }
+
                 ArrayPointSet points = ownerCluster.getPoints();
-                points.addAll(pointsToAdd);
+                points.addAll(pointsToAdd.getPoints());
                 ClusterPointSet newPoints = hullSolver.hull(points);
 
                 if (hullInterpreter.isValid(newPoints) && hullInterpreter.isAcceptableGrowth(ownerCluster, newPoints)) {
-                    matches.add(new ClusterMatch(ownerCluster, newPoints));
+                    matches.add(new ClusterMatch(ownerCluster, newPoints, pointsToAdd.getClassification()));
                 }
             }
 
@@ -93,12 +99,13 @@ public class ClusterManager {
         }
     }
 
-    private void updatingExisting(PointCluster existingCluster, ClusterPointSet newPoints) {
+    private void updatingExisting(ClusterMatch clusterMatch) {
         pointClusterLock.writeLock().lock();
 
         try {
-            existingCluster.setPoints(newPoints);
-            existingCluster.increaseInvestment();
+            PointCluster cluster = clusterMatch.getCluster();
+            cluster.setPoints(clusterMatch.getNewPoints(), clusterMatch.getClassification());
+            cluster.increaseInvestment();
 
             dirty = true;
         } finally {
@@ -106,13 +113,13 @@ public class ClusterManager {
         }
     }
 
-    private void createNew(List<PointCluster> ownerClusters, ClusterPointSet newPoints) {
+    private void createNew(List<PointCluster> ownerClusters, ClusterPointSet newPoints, BlockClassification classification) {
         pointClusterLock.writeLock().lock();
 
         try {
             PointCluster cluster = new PointCluster();
 
-            cluster.setPoints(newPoints);
+            cluster.setPoints(newPoints, classification);
             cluster.increaseInvestment();
 
             ownerClusters.add(cluster);
@@ -123,20 +130,20 @@ public class ClusterManager {
         }
     }
 
-    public void addPoints(UUID owner, ArrayPointSet pointsToAdd) {
+    public void addPoints(UUID owner, PlayerPointQueue pointsToAdd) {
         List<PointCluster> ownerClusters = getOwnerClusters(owner);
 
         // Try to match these points with an existing hull
         ClusterMatch existingCluster = getBestExistingMatch(ownerClusters, pointsToAdd);
         if (existingCluster != null) {
-            updatingExisting(existingCluster.getCluster(), existingCluster.getNewPoints());
+            updatingExisting(existingCluster);
             return;
         }
 
         // Try to start a new hull with the points
-        ClusterPointSet hulledPoints = hullSolver.hull(pointsToAdd);
+        ClusterPointSet hulledPoints = hullSolver.hull(pointsToAdd.getPoints());
         if (hullInterpreter.isValid(hulledPoints)) {
-            createNew(ownerClusters, hulledPoints);
+            createNew(ownerClusters, hulledPoints, pointsToAdd.getClassification());
         }
     }
 
@@ -146,14 +153,14 @@ public class ClusterManager {
         try {
             PlayerPointQueue queue = pointQueue.remove(player);
             ZiggyCore.getTaskBuilder().createAsyncTask(() -> {
-                addPoints(player, queue.flush());
+                addPoints(player, queue.accepted());
             });
         } finally {
             pointQueueLock.unlock();
         }
     }
 
-    private void enqueueWithLock(UUID player, Point2D point) {
+    private void enqueueWithLock(UUID player, Point2D point, BlockClassification classification) {
         PlayerPointQueue points = pointQueue.compute(player, (ignored, value) -> {
             if (value == null) {
                 value = new PlayerPointQueue();
@@ -163,7 +170,7 @@ public class ClusterManager {
 
         // If the new point is accepted by the current queue, defer to a new task
         // if not, flush immediately then queue the new point in a new queue.
-        if (points.accept(point)) {
+        if (points.accept(point, classification)) {
             ZTask newTask = ZiggyCore.getTaskBuilder().createDelayedTask(() -> {
                 flushQueue(player);
             }, ZiggyCore.getConfig().flushDelay);
@@ -171,15 +178,15 @@ public class ClusterManager {
             points.setNewTask(newTask);
         } else {
             flushQueue(player);
-            enqueueWithLock(player, point);
+            enqueueWithLock(player, point, classification);
         }
     }
 
-    public void enqueue(UUID player, Point2D point) {
+    public void enqueue(UUID player, Point2D point, BlockClassification classification) {
         pointQueueLock.lock();
 
         try {
-            enqueueWithLock(player, point);
+            enqueueWithLock(player, point, classification);
         } finally {
             pointQueueLock.unlock();
         }

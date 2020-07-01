@@ -40,7 +40,7 @@ public class BukkitPreventionProxy  {
                 player.getUniqueId(),
                 new BukkitLocation(block),
                 ZBlockInfo.IRRELEVANT,
-                new BukkitBlockInfo(block.getBlockData())
+                new BukkitBlockInfo(block.getBlockData(), block.getBiome())
         ));
     }
 
@@ -48,7 +48,7 @@ public class BukkitPreventionProxy  {
         return !protector.isAcceptable(new BlockActionContext(
                 player.getUniqueId(),
                 new BukkitLocation(block),
-                new BukkitBlockInfo(block.getBlockData()),
+                new BukkitBlockInfo(block.getBlockData(), block.getBiome()),
                 ZBlockInfo.IRRELEVANT
         ));
     }}

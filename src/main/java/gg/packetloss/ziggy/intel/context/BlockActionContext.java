@@ -22,6 +22,7 @@ package gg.packetloss.ziggy.intel.context;
 
 import gg.packetloss.ziggy.abstraction.ZBlockInfo;
 import gg.packetloss.ziggy.abstraction.ZLocation;
+import gg.packetloss.ziggy.abstraction.ZWorld;
 
 import java.util.UUID;
 
@@ -42,6 +43,10 @@ public class BlockActionContext {
 
     public UUID getPlayer() {
         return player;
+    }
+
+    public ZWorld getWorld() {
+        return location.getWorld();
     }
 
     public ZLocation getLocation() {

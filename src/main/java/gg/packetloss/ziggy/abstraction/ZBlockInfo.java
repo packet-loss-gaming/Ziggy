@@ -22,8 +22,18 @@ package gg.packetloss.ziggy.abstraction;
 
 public interface ZBlockInfo {
     public static final ZBlockInfo IRRELEVANT = new ZDummyInfo();
+    public static final ZBlockInfo VOID = new ZDummyInfo() {
+        @Override
+        public boolean isVoid() {
+            return true;
+        }
+    };
+
+    default public boolean isVoid() {
+        return false;
+    }
 
     public boolean isAir();
     public boolean isContainer();
-
+    public BlockClassification classify();
 }

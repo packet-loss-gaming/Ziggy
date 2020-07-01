@@ -25,6 +25,7 @@ import gg.packetloss.ziggy.abstraction.ZWorld;
 import gg.packetloss.ziggy.point.Point3D;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 
 import java.util.UUID;
@@ -48,7 +49,12 @@ public class BukkitWorld implements ZWorld {
 
     @Override
     public ZBlockInfo getInfoAt(Point3D point) {
-        return new BukkitBlockInfo(world.getBlockAt(point.getX(), point.getY(), point.getZ()).getBlockData());
+        if (point.getY() < 0) {
+            return ZBlockInfo.VOID;
+        }
+
+        Block block = world.getBlockAt(point.getX(), point.getY(), point.getZ());
+        return new BukkitBlockInfo(block.getBlockData(), block.getBiome());
     }
 
     @Override
