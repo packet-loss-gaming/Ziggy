@@ -99,6 +99,10 @@ public class TrustManager {
     }
 
     public ImmutableTrustData getLocalTrust(UUID owner, UUID player) {
+        if (owner.equals(player)) {
+            return ImmutableTrustData.NONE;
+        }
+
         trustLock.readLock().lock();
 
         try {
