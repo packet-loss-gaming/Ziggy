@@ -59,7 +59,7 @@ public abstract class AbstractBlockAddMatcher implements BlockAddMatcher {
         }
 
         // If the owner can't see this happening, and the player's global trust is bad, assume the worst.
-        if (trustContext.getGlobalTrust() < getGlobalTrustPunishmentLevel()) {
+        if (trustContext.getQuantifiedGlobalTrust() < getGlobalTrustPunishmentLevel()) {
             return getGlobalTrustPunishmentAdjustment();
         }
 

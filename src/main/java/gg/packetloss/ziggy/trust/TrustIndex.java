@@ -25,18 +25,24 @@ import java.util.Map;
 import java.util.UUID;
 
 public class TrustIndex {
-    private final Map<UUID, Integer> index = new HashMap<>();
+    private final Map<UUID, TrustData> index = new HashMap<>();
 
     public void adjustTrust(UUID player, int adjustment) {
-        index.compute(player, (ignored, value) -> {
+        TrustData data = index.compute(player, (ignored, value) -> {
             if (value == null) {
-                value = 0;
+                value = new TrustData();
             }
-            return value + adjustment;
+            return value;
         });
+        data.adjustContribution(adjustment);
     }
 
-    public int getTrust(UUID player) {
-        return index.getOrDefault(player, 0);
+    public ImmutableTrustData getTrust(UUID player) {
+        TrustData trustData = index.get(player);
+        if (trustData == null) {
+            return ImmutableTrustData.NONE;
+        }
+
+        return new ImmutableTrustData(trustData);
     }
 }

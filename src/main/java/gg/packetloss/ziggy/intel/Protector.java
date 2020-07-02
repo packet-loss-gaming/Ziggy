@@ -43,35 +43,51 @@ public class Protector {
         UUID owner = trustContext.getAffectedCluster().getOwner();
         UUID player = actionContext.getPlayer();
 
-        // If visible or the player has very high trust, allow, unless the local trust is poor
-        if (world.isVisibleChange(owner, player) || trustContext.getGlobalTrust() > 1000) {
-            return trustContext.getLocalTrust() >= -10;
+        // If visible or the player has very high trust, allow.
+        if (world.isVisibleChange(owner, player) || trustContext.getGlobalTrust().getPrestige() > 30) {
+            return true;
         }
 
-        // If this player is the only one with an interest, require higher trust for a local change,
-        // as there's less exposure.
-        if (trustContext.getNumberOfInterests() == 1) {
-            return trustContext.getLocalTrust() > 50;
+        if (trustContext.getRegionalInvestment() > 0) {
+            // If this player is the most invested in this area, this is a pass by default.
+            return true;
+        } else if (trustContext.getRegionalInvestment() == 0) {
+            // If the player has a tied investment, this is a pass so long as they don't have negative trust.
+            return trustContext.getQuantifiedLocalTrust() >= 0;
+        } else {
+            // If the player has less investment, they must have an established relationship with the player.
+            return trustContext.getLocalTrust().getPrestige() >= 2;
         }
-
-        // There are more people, allow so long as global trust is okay
-        if (trustContext.getNumberOfInterests() > 1) {
-            return trustContext.getGlobalTrust() > 0 && trustContext.getLocalTrust() >= -10;
-        }
-
-        return false;
     }
 
     public boolean isAcceptable(BlockActionContext blockAction) {
         UUID player = blockAction.getPlayer();
         ZLocation location = blockAction.getLocation();
 
+        // We don't pass judgement here.
+        if (core.isDisabledFor(location.getWorld())) {
+            return true;
+        }
+
         List<AnnotatedPointCluster> pointClusters = core.getAffectedClusters(location);
+
+        int regionalInvestment = 0;
+        for (AnnotatedPointCluster pointCluster : pointClusters) {
+            UUID owner = pointCluster.getOwner();
+            int investment = pointCluster.getPointCluster().getInvestment();
+
+            if (owner.equals(player)) {
+                regionalInvestment += investment;
+            } else {
+                regionalInvestment -= investment;
+            }
+        }
+
         for (AnnotatedPointCluster pointCluster : pointClusters) {
             UUID owner = pointCluster.getOwner();
             PlayerTrustContext trustContext = new PlayerTrustContext(
                     pointCluster,
-                    pointClusters.size(),
+                    regionalInvestment,
                     core.getGlobalTrust(player),
                     core.getLocalTrust(owner, player)
             );
@@ -81,6 +97,12 @@ public class Protector {
             }
         }
 
-        return !pointClusters.isEmpty() || core.getGlobalTrust(player) > -25;
+        // If we didn't check anything and this player has been behaving poorly,
+        // this is not okay.
+        if (pointClusters.isEmpty() && core.getGlobalTrust(player).getContribution() < -25) {
+            return false;
+        }
+
+        return true;
     }
 }

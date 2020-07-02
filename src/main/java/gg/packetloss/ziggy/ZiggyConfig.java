@@ -33,5 +33,9 @@ public class ZiggyConfig {
     public int investmentIncrement = 7;
     public int investmentDecrement = 1;
 
+    public int trustPrestigeValue = 150;
+    public int trustPrestigeAmount = 100;
+    public int trustContributionCap = 75;
+
     public Set<String> ignoredWorlds = Set.of("City");
 }

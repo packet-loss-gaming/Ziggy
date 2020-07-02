@@ -61,12 +61,12 @@ public abstract class AbstractBlockRemoveMatcher implements BlockRemoveMatcher {
         }
 
         // If the owner can't see this happening, and the player's global trust is bad, assume the worst.
-        if (trustContext.getGlobalTrust() < getGlobalTrustPunishmentLevel()) {
+        if (trustContext.getQuantifiedGlobalTrust() < getGlobalTrustPunishmentLevel()) {
             return getGlobalTrustPunishmentAdjustment();
         }
 
         // If high global trust, assume good intent.
-        if (trustContext.getGlobalTrust() > getGlobalTrustGraceLevel()) {
+        if (trustContext.getQuantifiedGlobalTrust() > getGlobalTrustGraceLevel()) {
             return getGlobalTrustGraceAdjustment();
         }
 

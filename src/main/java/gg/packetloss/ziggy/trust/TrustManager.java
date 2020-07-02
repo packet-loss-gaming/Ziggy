@@ -32,7 +32,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class TrustManager {
     private Map<UUID, TrustIndex> playerTrust = new HashMap<>();
-    private Map<UUID, Integer> globalTrust = new HashMap<>();
+    private TrustIndex globalTrust = new TrustIndex();
 
     private transient boolean dirty = false;
 
@@ -55,12 +55,7 @@ public class TrustManager {
     }
 
     private void adjustGlobalTrustWithLock(UUID player, int adjustment) {
-        globalTrust.compute(player, (ignored, value) -> {
-            if (value == null) {
-                value = 0;
-            }
-            return value + adjustment;
-        });
+        globalTrust.adjustTrust(player, adjustment);
     }
 
     private void adjustTrustWithLock(UUID owner, UUID player, int adjustment) {
@@ -80,11 +75,11 @@ public class TrustManager {
         }
     }
 
-    private int getGlobalTrustWithLock(UUID player) {
-        return globalTrust.getOrDefault(player, 0);
+    private ImmutableTrustData getGlobalTrustWithLock(UUID player) {
+        return globalTrust.getTrust(player);
     }
 
-    public int getGlobalTrust(UUID player) {
+    public ImmutableTrustData getGlobalTrust(UUID player) {
         trustLock.readLock().lock();
 
         try {
@@ -94,16 +89,16 @@ public class TrustManager {
         }
     }
 
-    private int getLocalTrustWithLock(UUID owner, UUID player) {
+    private ImmutableTrustData getLocalTrustWithLock(UUID owner, UUID player) {
         TrustIndex localTrustIndex = playerTrust.get(owner);
         if (localTrustIndex != null) {
             return localTrustIndex.getTrust(player);
         }
 
-        return 0;
+        return ImmutableTrustData.NONE;
     }
 
-    public int getLocalTrust(UUID owner, UUID player) {
+    public ImmutableTrustData getLocalTrust(UUID owner, UUID player) {
         trustLock.readLock().lock();
 
         try {
@@ -114,7 +109,10 @@ public class TrustManager {
     }
 
     public void writeToDisk(SerializationConsumer<TrustManager> consumer) throws IOException {
-        trustLock.writeLock().lock();
+        // If we don't get the lock immediately come back later, writing to disk is low priority.
+        if (!trustLock.writeLock().tryLock()) {
+            return;
+        }
 
         try {
             if (!dirty) {

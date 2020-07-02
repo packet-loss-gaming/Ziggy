@@ -20,34 +20,45 @@
 
 package gg.packetloss.ziggy.intel.context;
 
+import gg.packetloss.ziggy.ZiggyCore;
 import gg.packetloss.ziggy.point.AnnotatedPointCluster;
+import gg.packetloss.ziggy.trust.ImmutableTrustData;
 
 public class PlayerTrustContext {
     private final AnnotatedPointCluster affectedCluster;
-    private final int numOtherInterest;
-    private final int globalTrust;
-    private final int currentTrust;
+    private final int regionalInvestment;
+    private final ImmutableTrustData globalTrust;
+    private final ImmutableTrustData localTrust;
 
-    public PlayerTrustContext(AnnotatedPointCluster affectedCluster, int numOtherInterest, int globalTrust, int currentTrust) {
+    public PlayerTrustContext(AnnotatedPointCluster affectedCluster, int regionalInvestment,
+                              ImmutableTrustData globalTrust, ImmutableTrustData localTrust) {
         this.affectedCluster = affectedCluster;
-        this.numOtherInterest = numOtherInterest;
+        this.regionalInvestment = regionalInvestment;
         this.globalTrust = globalTrust;
-        this.currentTrust = currentTrust;
+        this.localTrust = localTrust;
     }
 
     public AnnotatedPointCluster getAffectedCluster() {
         return affectedCluster;
     }
 
-    public int getNumberOfInterests() {
-        return numOtherInterest;
+    public int getRegionalInvestment() {
+        return regionalInvestment;
     }
 
-    public int getGlobalTrust() {
+    public ImmutableTrustData getGlobalTrust() {
         return globalTrust;
     }
 
-    public int getLocalTrust() {
-        return currentTrust;
+    public ImmutableTrustData getLocalTrust() {
+        return localTrust;
+    }
+
+    public int getQuantifiedGlobalTrust() {
+        return globalTrust.getContribution() + (globalTrust.getPrestige() * ZiggyCore.getConfig().trustPrestigeAmount);
+    }
+
+    public int getQuantifiedLocalTrust() {
+        return localTrust.getContribution() + (localTrust.getPrestige() * ZiggyCore.getConfig().trustPrestigeAmount);
     }
 }

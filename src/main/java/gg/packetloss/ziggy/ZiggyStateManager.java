@@ -27,6 +27,7 @@ import gg.packetloss.ziggy.point.AnnotatedPointCluster;
 import gg.packetloss.ziggy.point.ClusterManager;
 import gg.packetloss.ziggy.point.Point2D;
 import gg.packetloss.ziggy.serialization.ZiggySerializer;
+import gg.packetloss.ziggy.trust.ImmutableTrustData;
 import gg.packetloss.ziggy.trust.TrustManager;
 
 import java.io.IOException;
@@ -41,8 +42,12 @@ public class ZiggyStateManager {
         this.trustManager = trustManager;
     }
 
+    public boolean isDisabledFor(ZWorld world) {
+        return ZiggyCore.getConfig().ignoredWorlds.contains(world.getFriendlyName());
+    }
+
     private Optional<ClusterManager> getFor(ZWorld world) {
-        if (ZiggyCore.getConfig().ignoredWorlds.contains(world.getFriendlyName())) {
+        if (isDisabledFor(world)) {
             return Optional.empty();
         }
 
@@ -82,11 +87,11 @@ public class ZiggyStateManager {
         trustManager.adjustTrust(owner, player, adjustment);
     }
 
-    public int getGlobalTrust(UUID player) {
+    public ImmutableTrustData getGlobalTrust(UUID player) {
         return trustManager.getGlobalTrust(player);
     }
 
-    public int getLocalTrust(UUID owner, UUID player) {
+    public ImmutableTrustData getLocalTrust(UUID owner, UUID player) {
         return trustManager.getLocalTrust(owner, player);
     }
 

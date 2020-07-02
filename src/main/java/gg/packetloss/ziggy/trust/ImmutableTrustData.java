@@ -18,22 +18,24 @@
  *
  */
 
-package gg.packetloss.ziggy.point;
+package gg.packetloss.ziggy.trust;
 
-public class ImmutablePointCluster {
-    private final int investment;
-    private final ClusterPointSet points;
+public class ImmutableTrustData {
+    public static final ImmutableTrustData NONE = new ImmutableTrustData(new TrustData());
 
-    public ImmutablePointCluster(PointCluster cluster) {
-        this.investment = cluster.getInvestment();
-        this.points = cluster.getPoints();
+    private final int contribution;
+    private final int prestige;
+
+    public ImmutableTrustData(TrustData trustData) {
+        this.contribution = trustData.getContribution();
+        this.prestige = trustData.getPrestige();
     }
 
-    public int getInvestment() {
-        return investment;
+    public int getContribution() {
+        return contribution;
     }
 
-    public ClusterPointSet getPoints() {
-        return new ClusterPointSet(points);
+    public int getPrestige() {
+        return prestige;
     }
 }
