@@ -20,12 +20,14 @@
 
 package gg.packetloss.ziggy.intel;
 
+import gg.packetloss.ziggy.ZiggyCore;
 import gg.packetloss.ziggy.ZiggyStateManager;
 import gg.packetloss.ziggy.abstraction.ZLocation;
 import gg.packetloss.ziggy.abstraction.ZWorld;
 import gg.packetloss.ziggy.intel.context.BlockActionContext;
 import gg.packetloss.ziggy.intel.context.PlayerTrustContext;
 import gg.packetloss.ziggy.point.AnnotatedPointCluster;
+import gg.packetloss.ziggy.trust.ImmutableTrustData;
 
 import java.util.List;
 import java.util.UUID;
@@ -83,24 +85,32 @@ public class Protector {
             }
         }
 
+        ImmutableTrustData globalTrust = core.getGlobalTrust(player);
+
+        // This player has a very low claim (if any) on this area, and is behaving destructively.
+        // This possible broad server grief.
+        if (regionalInvestment < ZiggyCore.getConfig().initialInvestment && globalTrust.getContribution() < -25) {
+            return false;
+        }
+
         for (AnnotatedPointCluster pointCluster : pointClusters) {
             UUID owner = pointCluster.getOwner();
+
+            // Don't check the owner against their own claim.
+            if (owner.equals(player)) {
+                continue;
+            }
+
             PlayerTrustContext trustContext = new PlayerTrustContext(
                     pointCluster,
                     regionalInvestment,
-                    core.getGlobalTrust(player),
+                    globalTrust,
                     core.getLocalTrust(owner, player)
             );
 
             if (!checkTrustContext(blockAction, trustContext)) {
                 return false;
             }
-        }
-
-        // If we didn't check anything and this player has been behaving poorly,
-        // this is not okay.
-        if (pointClusters.isEmpty() && core.getGlobalTrust(player).getContribution() < -25) {
-            return false;
         }
 
         return true;

@@ -31,6 +31,7 @@ import gg.packetloss.ziggy.intel.matcher.builtin.AnyBlockRemoveActionMatcher;
 import gg.packetloss.ziggy.intel.matcher.builtin.ContainerAddActionMatcher;
 import gg.packetloss.ziggy.intel.matcher.builtin.ContainerRemoveActionMatcher;
 import gg.packetloss.ziggy.point.AnnotatedPointCluster;
+import gg.packetloss.ziggy.trust.ImmutableTrustData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -78,12 +79,13 @@ public class Tracker {
             ZLocation location = blockContext.getLocation();
 
             List<AnnotatedPointCluster> pointClusters = core.getAffectedClusters(location);
+            ImmutableTrustData globalTrust = core.getGlobalTrust(player);
             for (AnnotatedPointCluster pointCluster : pointClusters) {
                 UUID owner = pointCluster.getOwner();
                 PlayerTrustContext trustContext = new PlayerTrustContext(
                         pointCluster,
                         pointClusters.size(),
-                        core.getGlobalTrust(player),
+                        globalTrust,
                         core.getLocalTrust(owner, player)
                 );
 
