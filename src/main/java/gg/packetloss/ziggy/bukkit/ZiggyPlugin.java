@@ -23,6 +23,7 @@ package gg.packetloss.ziggy.bukkit;
 import gg.packetloss.ziggy.ZiggyConfig;
 import gg.packetloss.ziggy.ZiggyCore;
 import gg.packetloss.ziggy.ZiggyStateManager;
+import gg.packetloss.ziggy.bukkit.abstraction.BukkitBlockInfo;
 import gg.packetloss.ziggy.bukkit.abstraction.BukkitTaskBuilder;
 import gg.packetloss.ziggy.bukkit.listener.BukkitAdministrativeListener;
 import gg.packetloss.ziggy.bukkit.listener.BukkitPreventionListener;
@@ -36,6 +37,8 @@ import gg.packetloss.ziggy.intel.Tracker;
 import gg.packetloss.ziggy.serialization.ZiggyGsonSerializer;
 import gg.packetloss.ziggy.serialization.ZiggySerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.block.Biome;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -95,6 +98,10 @@ public class ZiggyPlugin extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(listener, this);
     }
 
+    private void warmCaches() {
+        new BukkitBlockInfo(Material.STONE.createBlockData(), Biome.JUNGLE);
+    }
+
     private void serialize() {
         try {
             stateManager.serializeWith(serializer);
@@ -109,6 +116,8 @@ public class ZiggyPlugin extends JavaPlugin {
         registerEvents(new BukkitTrackingListener(new BukkitTrackerProxy(tracker)));
         registerEvents(new BukkitPreventionListener(new BukkitPreventionProxy(protector)));
         registerEvents(new BukkitAdministrativeListener(new BukkitAdministrativeProxy(admin)));
+
+        warmCaches();
 
         Bukkit.getScheduler().runTaskTimerAsynchronously(
                 this,
