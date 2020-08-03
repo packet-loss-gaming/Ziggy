@@ -65,11 +65,20 @@ public class BukkitBlockInfo implements ZBlockInfo {
     }
 
     private static boolean isOverworldBiome(Biome biome) {
-        return biome != Biome.NETHER;
+        return !isNetherBiome(biome);
     }
 
     private static boolean isNetherBiome(Biome biome) {
-        return biome == Biome.NETHER;
+        switch (biome) {
+            case NETHER_WASTES:
+            case SOUL_SAND_VALLEY:
+            case CRIMSON_FOREST:
+            case WARPED_FOREST:
+            case BASALT_DELTAS:
+                return true;
+            default:
+                return false;
+        }
     }
 
     private static EnumMap<Material, Function<Biome, BlockClassification>> classifications = new EnumMap<>(Material.class);

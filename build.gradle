@@ -19,19 +19,19 @@
  */
 
 apply plugin: 'java'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 repositories {
     mavenCentral()
 
     maven {
-        name 'Spigot Repository'
-        url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+        name 'Paper Repository'
+        url 'https://papermc.io/repo/repository/maven-public/'
     }
 }
 
 dependencies {
-    compile group: 'org.bukkit', name: 'bukkit', version: '1.15.2-R0.1-SNAPSHOT'
+    compileOnly group: 'com.destroystokyo.paper', name: 'paper-api', version: '1.16.1-R0.1-SNAPSHOT'
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
