@@ -20,7 +20,13 @@
 
 package gg.packetloss.ziggy.abstraction;
 
+import gg.packetloss.ziggy.threading.PluginTaskExecutor;
+import gg.packetloss.ziggy.threading.ThreadPoolZTask;
+
 public interface ZTaskBuilder {
-    public ZTask createAsyncTask(Runnable taskLogic);
+    public default ZTask createAsyncTask(Runnable taskLogic) {
+        return new ThreadPoolZTask(PluginTaskExecutor.submitAsync(taskLogic));
+    }
+
     public ZTask createDelayedTask(Runnable taskLogic, int delayedTicks);
 }

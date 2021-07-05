@@ -18,16 +18,16 @@
  *
  */
 
-package gg.packetloss.ziggy.bukkit.abstraction;
+package gg.packetloss.ziggy.threading;
 
-import gg.packetloss.ziggy.abstraction.ZTask;
-import gg.packetloss.ziggy.abstraction.ZTaskBuilder;
-import gg.packetloss.ziggy.bukkit.ZiggyPlugin;
-import org.bukkit.Bukkit;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
-public class BukkitTaskBuilder implements ZTaskBuilder {
-    @Override
-    public ZTask createDelayedTask(Runnable taskLogic, int delayedTicks) {
-        return new BukkitTask(Bukkit.getScheduler().runTaskLater(ZiggyPlugin.inst(), taskLogic, delayedTicks));
+public class PluginTaskExecutor {
+    private static ExecutorService INSTANCE = Executors.newCachedThreadPool();
+
+    public static Future<?> submitAsync(Runnable task) {
+        return INSTANCE.submit(task);
     }
 }
