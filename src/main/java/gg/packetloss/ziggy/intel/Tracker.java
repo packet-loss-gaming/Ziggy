@@ -20,16 +20,14 @@
 
 package gg.packetloss.ziggy.intel;
 
+import gg.packetloss.ziggy.ZiggyCore;
 import gg.packetloss.ziggy.ZiggyStateManager;
 import gg.packetloss.ziggy.abstraction.ZLocation;
 import gg.packetloss.ziggy.intel.context.BlockActionContext;
 import gg.packetloss.ziggy.intel.context.PlayerTrustContext;
 import gg.packetloss.ziggy.intel.matcher.BlockActionMatcher;
 import gg.packetloss.ziggy.intel.matcher.EventClassification;
-import gg.packetloss.ziggy.intel.matcher.builtin.AnyBlockAddActionMatcher;
-import gg.packetloss.ziggy.intel.matcher.builtin.AnyBlockRemoveActionMatcher;
-import gg.packetloss.ziggy.intel.matcher.builtin.ContainerAddActionMatcher;
-import gg.packetloss.ziggy.intel.matcher.builtin.ContainerRemoveActionMatcher;
+import gg.packetloss.ziggy.intel.matcher.builtin.*;
 import gg.packetloss.ziggy.point.AnnotatedPointCluster;
 import gg.packetloss.ziggy.trust.ImmutableTrustData;
 
@@ -56,6 +54,7 @@ public class Tracker {
 
         // Fallback matchers
         blockActionMatchers.add(new AnyBlockAddActionMatcher());
+        blockActionMatchers.add(new AnyBlockInteractActionMatcher());
         blockActionMatchers.add(new AnyBlockRemoveActionMatcher());
     }
 
@@ -93,8 +92,18 @@ public class Tracker {
             }
 
             EventClassification classification = matcher.classifyEvent(blockContext);
-            if (classification.isQueueing()) {
-                core.enqueue(player, location, classification.getBaseClassification());
+            switch (classification.getUpdateClassification()) {
+                case NONE -> {
+                    // This action shouldn't cause any cluster updates
+                }
+                case EXPANSION -> {
+                    // This action could expand or create a player's clusters
+                    core.enqueue(player, location, classification.getBaseClassification());
+                }
+                case MAINTAIN -> {
+                    // This action can only maintain a player's clusters
+                    core.touchAffected(player, location);
+                }
             }
         });
     }

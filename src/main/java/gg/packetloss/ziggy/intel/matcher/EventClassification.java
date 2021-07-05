@@ -23,21 +23,24 @@ package gg.packetloss.ziggy.intel.matcher;
 import gg.packetloss.ziggy.abstraction.BlockClassification;
 
 public enum EventClassification {
-    BLOCK_REMOVAL(false, BlockClassification.UNDECIDED),
-    STRUCTURE_ADD(true, BlockClassification.STRUCTURAL),
-    ENVIRONMENT_ADD(true, BlockClassification.ENVIRONMENTAL),
-    UNDECIDED_ADD(true, BlockClassification.UNDECIDED);
+    BLOCK_REMOVAL(UpdateScopeClassification.NONE, BlockClassification.UNDECIDED),
+    STRUCTURE_ADD(UpdateScopeClassification.EXPANSION, BlockClassification.STRUCTURAL),
+    ENVIRONMENT_ADD(UpdateScopeClassification.EXPANSION, BlockClassification.ENVIRONMENTAL),
+    UNDECIDED_ADD(UpdateScopeClassification.EXPANSION, BlockClassification.UNDECIDED),
+    STRUCTURE_INTERACT(UpdateScopeClassification.MAINTAIN, BlockClassification.STRUCTURAL),
+    ENVIRONMENT_INTERACT(UpdateScopeClassification.MAINTAIN, BlockClassification.ENVIRONMENTAL),
+    UNDECIDED_INTERACT(UpdateScopeClassification.MAINTAIN, BlockClassification.UNDECIDED);
 
-    private final boolean isQueueing;
+    private final UpdateScopeClassification updateClassification;
     private final BlockClassification baseClassification;
 
-    private EventClassification(boolean isQueueing, BlockClassification baseClassification) {
-        this.isQueueing = isQueueing;
+    private EventClassification(UpdateScopeClassification updateClassification, BlockClassification baseClassification) {
+        this.updateClassification = updateClassification;
         this.baseClassification = baseClassification;
     }
 
-    public boolean isQueueing() {
-        return isQueueing;
+    public UpdateScopeClassification getUpdateClassification() {
+        return updateClassification;
     }
 
     public BlockClassification getBaseClassification() {

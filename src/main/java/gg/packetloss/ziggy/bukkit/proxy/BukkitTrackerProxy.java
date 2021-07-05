@@ -52,4 +52,14 @@ public class BukkitTrackerProxy {
                 ZBlockInfo.IRRELEVANT
         ));
     }
+
+    public void interactBlock(Player player, Block block) {
+        BukkitBlockInfo blockInfo = new BukkitBlockInfo(block.getBlockData(), block.getBiome());
+        tracker.trackBlockAction(new BlockActionContext(
+            player.getUniqueId(),
+            new BukkitLocation(block),
+            blockInfo,
+            blockInfo
+        ));
+    }
 }

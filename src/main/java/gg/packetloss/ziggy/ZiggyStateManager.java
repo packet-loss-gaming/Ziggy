@@ -83,6 +83,14 @@ public class ZiggyStateManager {
         enqueue(player, location.getWorld(), location.getPosition().to2D(), classification);
     }
 
+    public void touchAffected(UUID player, ZWorld world, Point2D point) {
+        getFor(world).ifPresent(clusterManager -> clusterManager.touchPlayerClustersAt(player, point));
+    }
+
+    public void touchAffected(UUID player, ZLocation location) {
+        touchAffected(player, location.getWorld(), location.getPosition().to2D());
+    }
+
     public void applyTrustModification(UUID owner, UUID player, int adjustment) {
         trustManager.adjustTrust(owner, player, adjustment);
     }

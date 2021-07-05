@@ -21,13 +21,17 @@
 package gg.packetloss.ziggy.bukkit.listener;
 
 import gg.packetloss.ziggy.bukkit.proxy.BukkitTrackerProxy;
+import org.bukkit.Bukkit;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockState;
+import org.bukkit.block.TileState;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 
 public class BukkitTrackingListener implements Listener {
     private final BukkitTrackerProxy proxy;
@@ -50,5 +54,20 @@ public class BukkitTrackingListener implements Listener {
         Block block = event.getBlock();
 
         proxy.breakBlock(player, block);
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    public void onBlockInteract(PlayerInteractEvent event) {
+        Block block = event.getClickedBlock();
+        if (block == null) {
+            return;
+        }
+
+        if (!block.getType().isInteractable()) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        proxy.interactBlock(player, block);
     }
 }

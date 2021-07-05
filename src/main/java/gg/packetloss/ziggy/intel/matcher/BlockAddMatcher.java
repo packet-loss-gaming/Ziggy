@@ -30,7 +30,6 @@ public interface BlockAddMatcher extends BlockActionMatcher {
         Point3D lowerPosition = blockContext.getLocation().getPosition().add(0, -depth, 0);
         ZBlockInfo lowerBlock = blockContext.getWorld().getInfoAt(lowerPosition);
         return lowerBlock.classify();
-
     }
 
     @Override

@@ -35,6 +35,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
 
 public class ClusterManager {
     private transient final HullSolver hullSolver = new JarvisHull();
@@ -48,18 +49,22 @@ public class ClusterManager {
     private transient ReadWriteLock pointClusterLock = new ReentrantReadWriteLock();
     private transient Lock pointQueueLock = new ReentrantLock();
 
+    private List<PointCluster> getOwnerClustersWithLock(UUID owner) {
+        return pointClusters.compute(owner, (ignored, value) -> {
+            if (value == null) {
+                value = new ArrayList<>();
+            }
+            return value;
+        });
+    }
+
     private List<PointCluster> getOwnerClusters(UUID owner) {
-        pointClusterLock.writeLock().lock();
+        pointClusterLock.readLock().lock();
 
         try {
-            return pointClusters.compute(owner, (ignored, value) -> {
-                if (value == null) {
-                    value = new ArrayList<>();
-                }
-                return value;
-            });
+            return getOwnerClustersWithLock(owner);
         } finally {
-            pointClusterLock.writeLock().unlock();
+            pointClusterLock.readLock().unlock();
         }
     }
 
@@ -192,29 +197,37 @@ public class ClusterManager {
         }
     }
 
+    private void gatherClustersWithLockAt(List<PointCluster> sourceList, Point2D point, Consumer<PointCluster> consumer) {
+        for (PointCluster cluster : sourceList) {
+            // Filter out points that are clearly out of bounds
+            if (!cluster.quickContains(point)) {
+                continue;
+            }
+
+            ClusterPointSet points = cluster.getPoints();
+
+            // Calculate original area
+            long originalArea = points.getArea();
+
+            // Calculate new area
+            points.add(point);
+            long newArea = hullSolver.hull(points).getArea();
+
+            if (newArea <= originalArea) {
+                consumer.accept(cluster);
+            }
+        }
+    }
+
     private List<AnnotatedPointCluster> getClustersWithLockAt(Point2D point) {
         List<AnnotatedPointCluster> annotatedPointClusters = new ArrayList<>();
 
         for (Map.Entry<UUID, List<PointCluster>> entry : pointClusters.entrySet()) {
-            for (PointCluster cluster : entry.getValue()) {
-                // Filter out points that are clearly out of bounds
-                if (!cluster.quickContains(point)) {
-                    continue;
-                }
-
-                ClusterPointSet points = cluster.getPoints();
-
-                // Calculate original area
-                long originalArea = points.getArea();
-
-                // Calculate new area
-                points.add(point);
-                long newArea = hullSolver.hull(points).getArea();
-
-                if (newArea <= originalArea) {
-                    annotatedPointClusters.add(new AnnotatedPointCluster(entry.getKey(), cluster));
-                }
-            }
+            gatherClustersWithLockAt(
+                entry.getValue(),
+                point,
+                (cluster) -> new AnnotatedPointCluster(entry.getKey(), cluster)
+            );
         }
 
         return annotatedPointClusters;
@@ -255,6 +268,41 @@ public class ClusterManager {
         } finally {
             pointClusterLock.readLock().unlock();
         }
+    }
+
+    public List<PointCluster> getOwnerClustersAtPoint(UUID owner, Point2D point) {
+        List<PointCluster> affected = new ArrayList<>();
+        pointClusterLock.readLock().lock();
+
+        try {
+            List<PointCluster> ownerClusters = getOwnerClustersWithLock(owner);
+
+            // Minimize lock contention by bundling everything under our read lock,
+            // then getting the write lock once in touchAll.
+            gatherClustersWithLockAt(ownerClusters, point, affected::add);
+        } finally {
+            pointClusterLock.readLock().unlock();
+        }
+        return affected;
+    }
+
+    private void touchAll(List<PointCluster> clusters) {
+        pointClusterLock.writeLock().lock();
+
+        try {
+            for (PointCluster cluster : clusters) {
+                cluster.increaseInvestment();
+            }
+
+            dirty = true;
+        } finally {
+            pointClusterLock.writeLock().unlock();
+        }
+    }
+
+    public void touchPlayerClustersAt(UUID player, Point2D point) {
+        // FIXME: Should we put this on a background thread or otherwise debounce this?
+        touchAll(getOwnerClustersAtPoint(player, point));
     }
 
     private void cleanupWithLock() {

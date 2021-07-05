@@ -65,4 +65,5 @@ public abstract class AbstractBlockAddMatcher implements BlockAddMatcher {
 
         // Otherwise, assume the best/neutrality.
         return getFallbackTrustAdjustment();
-    }}
+    }
+}

@@ -60,4 +60,8 @@ public class BlockActionContext {
     public ZBlockInfo getTo() {
         return to;
     }
+
+    public boolean isInteract() {
+        return from == to;
+    }
 }
