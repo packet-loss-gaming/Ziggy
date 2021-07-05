@@ -34,19 +34,20 @@ dependencies {
     compileOnly group: 'com.destroystokyo.paper', name: 'paper-api', version: '1.16.1-R0.1-SNAPSHOT'
 }
 
-sourceCompatibility = JavaVersion.VERSION_11
-targetCompatibility = JavaVersion.VERSION_11
-
 group = 'gg.packetloss'
 version = '1.0-SNAPSHOT'
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(16)
+    }
+}
+
 processResources {
+    duplicatesStrategy DuplicatesStrategy.INCLUDE
+
     from (sourceSets.main.resources.srcDirs) {
         expand 'projectVersion': project.version
         include 'plugin.yml'
-    }
-
-    from (sourceSets.main.resources.srcDirs) {
-        exclude 'plugin.yml'
     }
 }
